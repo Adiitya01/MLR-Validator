@@ -1,0 +1,26 @@
+{
+  "name": "mlr-ui",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MLR validation tool - Unified Frontend Gateway",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "cd MLR_UI_React && npm run dev",
+    "build": "cd MLR_UI_React && npm run build",
+    "preview": "cd MLR_UI_React && npm run preview"
+  },
+  "keywords": [
+    "statement-validation",
+    "pdf-processing",
+    "gemini-api"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "http-proxy": "^1.18.1",
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {}
+}

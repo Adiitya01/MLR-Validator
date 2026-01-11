@@ -1,0 +1,18 @@
+[
+  {
+    "page_number": 1,
+    "row_name": "amikacin",
+    "superscript_number": "1,2,3",
+    "ph_value": "3.5-5.5",
+    "column_name": "Local site pain on Infusion.Redness at injection site",
+    "mark_type": "●.●"
+  },
+  {
+    "page_number": 1,
+    "row_name": "ampicillin",
+    "superscript_number": "4,5,6,7",
+    "ph_value": "8.0-10.0",
+    "column_name": "Thrombophlebitis.Local site pain on Infusion.No simultaneous infusion/dedicated lumen",
+    "mark_type": "●.●.◆"
+  }
+]
