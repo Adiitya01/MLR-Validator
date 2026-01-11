@@ -1,0 +1,85 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: mlr-postgres
+    plan: starter
+    ipAllowList: []
+    databaseName: brochure_app
+    user: postgres
+    postgresMajorVersion: 15
+
+  # Backend API (FastAPI)
+  - type: web
+    name: mlr-backend
+    env: python
+    plan: standard
+    numInstances: 1
+    healthCheckPath: /health
+    
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mlr-postgres
+          property: connectionString
+      - key: MONGODB_URI
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
+      - key: CORS_ORIGINS
+        value: https://mlr-frontend.render.com
+      - key: API_HOST
+        value: "0.0.0.0"
+      - key: API_PORT
+        value: $PORT
+    
+    routes:
+      - type: http
+        path: /
+    
+    disk:
+      name: app-logs
+      mountPath: /app/logs
+      sizeGB: 1
+
+  # Frontend (React with Vite)
+  - type: web
+    name: mlr-frontend
+    env: node
+    plan: standard
+    numInstances: 1
+    buildCommand: |
+      cd MLR_UI_React
+      npm ci
+      npm run build
+    
+    startCommand: cd MLR_UI_React && npm run preview
+    
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: REACT_APP_API_URL
+        value: https://mlr-backend.render.com
+      - key: REACT_APP_ENV
+        value: production
+    
+    routes:
+      - type: http
+        path: /
