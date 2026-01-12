@@ -1,6 +1,5 @@
 # Environment variables (NEVER commit API keys!)
 .env
-.env.production
 .env.local
 .env.*.local
 

@@ -24,7 +24,8 @@ export default function History({ onSelectBrochure }) {
       setLoading(true)
       setError(null)
       // Fetch all validation history with results from single endpoint
-      const response = await fetch('http://localhost:8000/validation-history')
+      const apiBaseURL = import.meta.env.REACT_APP_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiBaseURL}/validation-history`)
       if (!response.ok) {
         throw new Error('Failed to fetch history')
       }
@@ -69,7 +70,7 @@ export default function History({ onSelectBrochure }) {
     }
     const s = statusMap[status] || statusMap.completed
     return (
-      <div 
+      <div
         className="status-indicator"
         title={s.tooltip}
         style={{
@@ -85,11 +86,11 @@ export default function History({ onSelectBrochure }) {
 
   const getConfidenceStats = (results) => {
     if (!results || results.length === 0) return null
-    
+
     const high = results.filter(r => r.confidence_score >= 0.8).length
     const medium = results.filter(r => r.confidence_score >= 0.6 && r.confidence_score < 0.8).length
     const low = results.filter(r => r.confidence_score < 0.6).length
-    
+
     return { high, medium, low }
   }
 

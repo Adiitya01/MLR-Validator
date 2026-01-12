@@ -34,14 +34,15 @@ export default function LoginForm({ onSuccess }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/login', {
+      const apiBaseURL = import.meta.env.REACT_APP_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiBaseURL}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -139,8 +140,8 @@ export default function LoginForm({ onSuccess }) {
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="form-button"
             disabled={loading}
           >

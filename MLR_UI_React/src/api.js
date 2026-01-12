@@ -2,7 +2,7 @@
 // Backend runs on http://localhost:8000
 
 class APIClient {
-  constructor(baseUrl = 'http://localhost:8000') {
+  constructor(baseUrl = import.meta.env.REACT_APP_API_URL || 'http://localhost:8000') {
     this.baseUrl = baseUrl;
     this.isConnected = false;
   }
