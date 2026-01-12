@@ -74,14 +74,27 @@ For each table in the PDF, do the following:
 - Do not include markdown or explanations, only the JSON array.
 '''
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash-image",
-        contents=[
-            types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
+    # Detect if we're using the new Client or the legacy genai
+    if hasattr(client, "models"):
+        # New API (google-genai)
+        response = client.models.generate_content(
+            model="gemini-2.0-flash", # Use standard flash if image version not found
+            contents=[
+                types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
+                prompt
+            ],
+            config=types.GenerateContentConfig(temperature=0.0)
+        )
+    else:
+        # Legacy API (google-generativeai)
+        # In legacy mode, we might need a model object
+        model = client.GenerativeModel("gemini-2.0-flash")
+        # In legacy, Part might not be needed for direct bytes if supported, 
+        # but let's try the safest legacy way:
+        response = model.generate_content([
+            {"mime_type": "application/pdf", "data": pdf_bytes},
             prompt
-        ],
-        config=genai.types.GenerateContentConfig(temperature=0.0)
-    )
+        ])
 
     resp = response.text.strip()
     # Clean up Markdown code blocks if present
@@ -228,14 +241,24 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
     - If the page has no citations and no tables, return an empty array [].
     '''
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash-image",
-        contents=[
-            types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
+    # Detect if we're using the new Client or the legacy genai
+    if hasattr(client, "models"):
+        # New API
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=[
+                types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
+                prompt
+            ],
+            config=types.GenerateContentConfig(temperature=0.0)
+        )
+    else:
+        # Legacy API
+        model = client.GenerativeModel("gemini-2.0-flash")
+        response = model.generate_content([
+            {"mime_type": "application/pdf", "data": pdf_bytes},
             prompt
-        ],
-        config=genai.types.GenerateContentConfig(temperature=0.0)
-    )
+        ])
 
     resp = response.text.strip()
 
