@@ -78,7 +78,7 @@ For each table in the PDF, do the following:
     if hasattr(client, "models"):
         # New API (google-genai)
         response = client.models.generate_content(
-            model="gemini-2.0-flash", # Use standard flash if image version not found
+            model="gemini-2.5-flash-image", # Use standard flash if image version not found
             contents=[
                 types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
                 prompt
@@ -88,7 +88,7 @@ For each table in the PDF, do the following:
     else:
         # Legacy API (google-generativeai)
         # In legacy mode, we might need a model object
-        model = client.GenerativeModel("gemini-2.0-flash")
+        model = client.GenerativeModel("gemini-2.5-flash-image")
         # In legacy, Part might not be needed for direct bytes if supported, 
         # but let's try the safest legacy way:
         response = model.generate_content([
@@ -245,7 +245,7 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
     if hasattr(client, "models"):
         # New API
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash-image",
             contents=[
                 types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
                 prompt
@@ -254,7 +254,7 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
         )
     else:
         # Legacy API
-        model = client.GenerativeModel("gemini-2.0-flash")
+        model = client.GenerativeModel("gemini-2.5-flash-image")
         response = model.generate_content([
             {"mime_type": "application/pdf", "data": pdf_bytes},
             prompt
