@@ -110,9 +110,10 @@ app.include_router(drug_router)
 app.include_router(research_router)
 
 # CORS Middleware
+cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
