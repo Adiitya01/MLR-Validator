@@ -3,6 +3,7 @@
 
 class APIClient {
   constructor(baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000') {
+    console.log('[DEBUG] APIClient initialized with baseUrl:', baseUrl);
     this.baseUrl = baseUrl;
     this.isConnected = false;
   }
@@ -84,11 +85,18 @@ class APIClient {
         };
       }
 
+      console.log(`[DEBUG] Calling ${this.baseUrl}/run-pipeline`);
       const response = await fetch(`${this.baseUrl}/run-pipeline`, options);
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
+        let errorDetail = '';
+        try {
+          const errorJson = await response.json();
+          errorDetail = errorJson.detail || JSON.stringify(errorJson);
+        } catch (e) {
+          errorDetail = await response.text();
+        }
+        throw new Error(`API error: ${response.status} - ${errorDetail || response.statusText}`);
       }
 
       const data = await response.json();
