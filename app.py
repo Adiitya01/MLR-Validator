@@ -504,7 +504,7 @@ async def run_pipeline(
                 logger.error(f"Validation failed: {str(e)}")
                 raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
 
-            # ---------- SAVE RESULTS TO MONGODB ----------
+            # ---------- SAVE RESULTS TO MONGODB (OPTIONAL) ----------
             # Convert ValidationResult dataclass objects to dictionaries
             results_dicts = [asdict(r) for r in results]
 
@@ -537,31 +537,33 @@ async def run_pipeline(
                 logger.info(f"Storage optimization: Evidence texts hashed (SHA256)")
                 logger.info(f"Confidence scoring: Normalized with reasoning")
             except Exception as e:
-                logger.error(f"Failed to save to MongoDB: {str(e)}")
+                logger.warning(f"Failed to save to MongoDB v2: {str(e)}")
                 # Fall back to legacy collection if v2 fails
                 try:
                     validation_collection.insert_one(mongo_doc)
                     logger.warning("Saved to legacy collection (fallback)")
                 except Exception as fallback_error:
-                    logger.error(f"Failed to save to both collections: {str(fallback_error)}")
-                    raise HTTPException(status_code=500, detail="Failed to persist validation results")
+                    logger.warning(f"Failed to save to both collections: {str(fallback_error)}. Continuing without database.")
 
-            # ---------- UPDATE STATUS ----------
-            db = SessionLocal()
-            db.execute(
-                text("""
-                    UPDATE brochures
-                    SET status = :status
-                    WHERE id = :id
-                """),
-                {
-                    "status": "completed",
-                    "id": brochure_id
-                }
-            )
-            db.commit()
-            db.close()
-            logger.info(f"Updated brochure status to completed: {brochure_id}")
+            # ---------- UPDATE STATUS (OPTIONAL) ----------
+            try:
+                db = SessionLocal()
+                db.execute(
+                    text("""
+                        UPDATE brochures
+                        SET status = :status
+                        WHERE id = :id
+                    """),
+                    {
+                        "status": "completed",
+                        "id": brochure_id
+                    }
+                )
+                db.commit()
+                db.close()
+                logger.info(f"Updated brochure status to completed: {brochure_id}")
+            except Exception as e:
+                logger.warning(f"Failed to update status in SQL: {str(e)}. Continuing without database.")
 
             # ---------- SUCCESS RESPONSE ----------
             pipeline_elapsed = time.time() - pipeline_start
