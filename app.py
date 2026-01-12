@@ -129,6 +129,15 @@ def health():
     return {"status": "ok"}
 
 
+@app.get("/")
+def root():
+    return {
+        "status": "ok",
+        "service": "MLR Validator Backend",
+        "message": "Backend is running successfully 🚀"
+    }
+
+
 @app.get("/mongodb-status")
 def mongodb_status():
     return {"status": "disabled", "message": "Database is currently disabled"}
