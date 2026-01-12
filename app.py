@@ -13,21 +13,19 @@ import json
 from queue import Queue
 from threading import Lock
 from uuid import uuid4
-from sqlalchemy import text
-from db import SessionLocal
+# from sqlalchemy import text
+# from db import SessionLocal
 from datetime import datetime
-from mongo_db import validation_collection, retry_db, validation_collection_v2
-from mongo_schema import StorageOptimizer, ConfidenceScoringOptimizer
-from db import SessionLocal
+# from mongo_db import validation_collection, retry_db, validation_collection_v2
+# from mongo_schema import StorageOptimizer, ConfidenceScoringOptimizer
 from dataclasses import asdict
 
-# Auth imports
-from database import SessionLocal as AuthSessionLocal, get_db
-from security import hash_password, verify_password, create_access_token
-from schemas import UserCreate, UserLogin, UserResponse, TokenResponse
+# Auth imports disabled
+# from database import SessionLocal as AuthSessionLocal, get_db
+# from security import hash_password, verify_password, create_access_token
+# from schemas import UserCreate, UserLogin, UserResponse, TokenResponse
 
-# Import get_current_user dependency
-from security import get_current_user
+# from security import get_current_user
 
 
 from dotenv import load_dotenv
@@ -133,42 +131,7 @@ def health():
 
 @app.get("/mongodb-status")
 def mongodb_status():
-    """
-    Check MongoDB setup status and collection details
-    """
-    try:
-        from mongo_db import mongo_db as db
-        
-        # Check connection
-        db.command('ping')
-        
-        # Get collection info
-        validation_v2_info = {
-            "name": "validation_results_v2",
-            "document_count": validation_collection_v2.count_documents({}),
-            "indexes": [{"name": idx["name"]} for idx in validation_collection_v2.list_indexes()]
-        }
-        
-        legacy_info = {
-            "name": "validation_results",
-            "document_count": validation_collection.count_documents({})
-        }
-        
-        return {
-            "status": "ok",
-            "mongodb_connected": True,
-            "validation_results_v2": validation_v2_info,
-            "validation_results_legacy": legacy_info,
-            "schema_initialized": True
-        }
-    
-    except Exception as e:
-        logger.error(f"MongoDB status check failed: {str(e)}")
-        return {
-            "status": "error",
-            "mongodb_connected": False,
-            "error": str(e)
-        }
+    return {"status": "disabled", "message": "Database is currently disabled"}
 
 
 # ============================================================================
@@ -194,84 +157,8 @@ async def get_latest_logs():
 # ============================================================================
 
 @app.get("/validation-history")
-def get_validation_history(authorization: str = Header(None)):
-    """
-    Get validation history for the logged-in user ONLY.
-    Requires JWT token in Authorization header.
-    """
-    try:
-        # Extract token from "Bearer <token>"
-        if not authorization or not authorization.startswith("Bearer "):
-            raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-        
-        token = authorization.replace("Bearer ", "")
-        
-        # Decode JWT to get user_id
-        from security import decode_token
-        payload = decode_token(token)
-        
-        if not payload:
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
-        
-        user_id = payload.get("user_id")
-        if not user_id:
-            raise HTTPException(status_code=401, detail="Token missing user_id")
-        
-        logger.info(f"Fetching validation history for user_id: {user_id}")
-        
-        if SessionLocal:
-            session = SessionLocal()
-        else:
-            logger.warning("SessionLocal not initialized, skipping SQL history fetch")
-            return {"history": []}
-        
-        # Query only THIS USER's brochures
-        query = text("""
-            SELECT id, brochure_path, status, created_at 
-            FROM brochures 
-            WHERE user_id = :user_id
-            ORDER BY created_at DESC
-        """)
-        
-        result = session.execute(query, {"user_id": user_id})
-        history = []
-        
-        for row in result:
-            brochure_id = str(row[0])
-            
-            # Fetch validation results from MongoDB (try v2 first, then legacy)
-            doc = validation_collection_v2.find_one(
-                {"brochure_id": brochure_id},
-                {"_id": 0}
-            )
-            
-            # Fallback to legacy collection if v2 not found
-            if not doc:
-                doc = validation_collection.find_one(
-                    {"brochure_id": brochure_id},
-                    {"_id": 0}
-                )
-            
-            # Build history item
-            history_item = {
-                "id": brochure_id,
-                "filename": row[1].split('/')[-1] if row[1] else "Unknown",
-                "status": row[2],
-                "created_at": row[3].isoformat() if row[3] else None,
-                "results": doc.get("results", []) if doc else [],
-                "total_statements": doc.get("total_statements", 0) if doc else 0
-            }
-            
-            history.append(history_item)
-        
-        session.close()
-        logger.info(f"Returning {len(history)} brochures for user_id: {user_id}")
-        return {"history": history}
-    
-    
-    except Exception as e:
-        logger.error(f"Error fetching validation history: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to fetch validation history")
+def get_validation_history():
+    return {"history": []}
 
 
 # ============================================================================
@@ -508,310 +395,34 @@ async def run_pipeline(
                 logger.error(f"Validation failed: {str(e)}")
                 raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
 
-            # ---------- SAVE RESULTS TO MONGODB (OPTIONAL) ----------
-            # Convert ValidationResult dataclass objects to dictionaries
+            # ---------- NO DATABASE STORAGE ----------
             results_dicts = [asdict(r) for r in results]
-
-            # Improve confidence scoring consistency
-            logger.info("Normalizing confidence scores...")
-            results_dicts = ConfidenceScoringOptimizer.normalize_confidence_scores(results_dicts)
-
-            # Optimize storage by hashing evidence texts
-            logger.info("Optimizing storage...")
-            results_optimized = [StorageOptimizer.compress_result(r) for r in results_dicts]
-
-            # Build optimized document for v2 collection
-            mongo_doc = {
-                "brochure_id": brochure_id,
-                "brochure_name": brochure_pdf.filename,
-                "total_statements": len(results_optimized),
-                "results": results_optimized,
-                "schema_version": 2,
-                "created_at": datetime.utcnow(),
-                "processing_time_seconds": time.time() - pipeline_start
-            }
-
-            # Insert with retry-safe logic and idempotency
-            try:
-                inserted_id = retry_db.insert_one_with_retry(
-                    mongo_doc, 
-                    idempotency_key=brochure_id
-                )
-                logger.info(f"Saved validation results to MongoDB v2: {inserted_id}")
-                logger.info(f"Storage optimization: Evidence texts hashed (SHA256)")
-                logger.info(f"Confidence scoring: Normalized with reasoning")
-            except Exception as e:
-                logger.warning(f"Failed to save to MongoDB v2: {str(e)}")
-                # Fall back to legacy collection if v2 fails
-                try:
-                    validation_collection.insert_one(mongo_doc)
-                    logger.warning("Saved to legacy collection (fallback)")
-                except Exception as fallback_error:
-                    logger.warning(f"Failed to save to both collections: {str(fallback_error)}. Continuing without database.")
-
-            # ---------- UPDATE STATUS (OPTIONAL) ----------
-            try:
-                if SessionLocal:
-                    db = SessionLocal()
-                    db.execute(
-                        text("""
-                            UPDATE brochures
-                            SET status = :status
-                            WHERE id = :id
-                        """),
-                        {
-                            "status": "completed",
-                            "id": brochure_id
-                        }
-                    )
-                    db.commit()
-                    db.close()
-                    logger.info(f"Updated brochure status to completed: {brochure_id}")
-                else:
-                    logger.warning("SessionLocal not initialized, skipping SQL status update")
-            except Exception as e:
-                logger.warning(f"Failed to update status in SQL: {str(e)}. Continuing without database.")
-
-            # ---------- SUCCESS RESPONSE ----------
+            
+            # Success Response
             pipeline_elapsed = time.time() - pipeline_start
             logger.info(f"[PIPELINE COMPLETE] Total time: {pipeline_elapsed:.2f}s, Results: {len(results)}")
-
-            print(f"\n{'='*70}")
-            print(f"PIPELINE COMPLETED SUCCESSFULLY")
-            print(f"Total time: {pipeline_elapsed:.2f} seconds")
-            print(f"Statements validated: {len(results)}")
-            print(f"{'='*70}\n")
 
             response = {
                 "status": "success",
                 "brochure_id": brochure_id,
                 "pipeline_stages": 4,
-                "total_statements": len(results_optimized),
-                "results": results_optimized
+                "total_statements": len(results),
+                "results": results_dicts
             }
 
             return response
         except HTTPException:
             raise
         except Exception as e:
-            # ---------- UPDATE STATUS TO FAILED ----------
-            if SessionLocal:
-                try:
-                    db = SessionLocal()
-                    db.execute(
-                        text("""
-                            UPDATE brochures
-                            SET status = :status
-                            WHERE id = :id
-                        """),
-                        {
-                            "status": "failed",
-                            "id": brochure_id
-                        }
-                    )
-                    db.commit()
-                    db.close()
-                    logger.error(f"Updated brochure status to failed: {brochure_id}")
-                except Exception as db_err:
-                    logger.error(f"Failed to update status to failed in SQL: {str(db_err)}")
-            else:
-                logger.warning("SessionLocal not initialized, skipping SQL status update on failure")
-
             error_trace = traceback.format_exc()
-            print(f"\n{'='*70}")
-            print(f"❌ PIPELINE FAILED")
-            print(f"{'='*70}")
-            print(f"Error: {str(e)}")
-            print(f"\n📋 Traceback:")
-            print(error_trace)
-            print(f"{'='*70}\n")
-
+            logger.error(f"PIPELINE FAILED: {str(e)}\n{error_trace}")
             raise HTTPException(status_code=500, detail=str(e))
 
 
-# ============================================
-# 🔐 AUTHENTICATION ENDPOINTS
-# ============================================
-
+# Authentication endpoints disabled
+"""
 @app.post("/signup")
 def signup(user: UserCreate):
-    """Register a new user"""
-    # DEBUG: Print database URL
-    import os
-    print("DEBUG: DATABASE_URL =", os.getenv("DATABASE_URL"))
-    
-    if not AuthSessionLocal:
-        raise HTTPException(status_code=503, detail="Database not configured. Authentication is unavailable.")
-    
-    db = AuthSessionLocal()
-    
-    try:
-        # Normalize email: trim whitespace and convert to lowercase
-        email = user.email.strip().lower()
-        print(f"DEBUG: Normalized email = {email}")
-        
-        # Check if email already exists
-        existing = db.execute(
-            text("SELECT id FROM users WHERE email = :email"),
-            {"email": email}
-        ).fetchone()
-        
-        # DEBUG: Print query result
-        print(f"DEBUG: Existing user query result = {existing}")
-        
-        # Also debug: check all emails in database
-        all_emails = db.execute(text("SELECT email FROM users")).fetchall()
-        print(f"DEBUG: All emails in database = {[e[0] for e in all_emails]}")
-        
-        if existing:
-            db.close()
-            print(f"DEBUG: Email {email} already exists")
-            raise HTTPException(status_code=400, detail="Email already registered")
-        
-        # Insert new user
-        result = db.execute(
-            text("""
-                INSERT INTO users (email, password_hash, full_name, created_at)
-                VALUES (:email, :password_hash, :full_name, :created_at)
-                RETURNING id, email, full_name
-            """),
-            {
-                "email": email,
-                "password_hash": hash_password(user.password),
-                "full_name": user.full_name or email.split("@")[0],
-                "created_at": datetime.utcnow()
-            }
-        )
-        
-        new_user = result.fetchone()
-        db.commit()
-        db.close()
-        
-        # Create access token
-        user_id = int(new_user[0]) if hasattr(new_user[0], '__int__') else new_user[0]
-        access_token = create_access_token(data={"sub": email, "user_id": user_id})
-        
-        # Use UserResponse Pydantic model for proper serialization
-        user_response = UserResponse(
-            id=user_id,
-            email=str(new_user[1]),
-            full_name=str(new_user[2]) if new_user[2] else None
-        )
-        
-        logger.info(f"✓ User registered: {email}")
-        print(f"DEBUG: User registered successfully: {email}")
-        
-        # Return response with proper JSON serialization
-        return {
-            "message": "User created successfully",
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user": user_response.model_dump()
-        }
-        
-    except HTTPException:
-        db.close()
-        raise
-    except Exception as e:
-        db.rollback()
-        db.close()
-        logger.error(f"Signup error: {str(e)}")
-        print(f"DEBUG: Signup exception: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/login")
-def login(user: UserLogin):
-    """Login user and return access token"""
-    if not AuthSessionLocal:
-        raise HTTPException(status_code=503, detail="Database not configured. Authentication is unavailable.")
-    
-    db = AuthSessionLocal()
-    
-    try:
-        # Find user by email
-        db_user = db.execute(
-            text("SELECT id, email, password_hash, full_name FROM users WHERE email = :email"),
-            {"email": user.email}
-        ).fetchone()
-        
-        if not db_user:
-            db.close()
-            raise HTTPException(status_code=401, detail="Invalid email or password")
-        
-        # Verify password
-        if not verify_password(user.password, db_user[2]):
-            db.close()
-            raise HTTPException(status_code=401, detail="Invalid email or password")
-        
-        db.close()
-        
-        # Convert id to int (handle UUID type if needed)
-        user_id = int(db_user[0]) if hasattr(db_user[0], '__int__') else db_user[0]
-        
-        # Create access token
-        access_token = create_access_token(data={"sub": user.email, "user_id": user_id})
-        
-        # Use UserResponse Pydantic model for proper serialization
-        user_response = UserResponse(
-            id=user_id,
-            email=str(db_user[1]),
-            full_name=str(db_user[3]) if db_user[3] else None
-        )
-        
-        logger.info(f"✓ User logged in: {user.email}")
-        
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user": user_response.model_dump()
-        }
-        
-    except HTTPException:
-        db.close()
-        raise
-    except Exception as e:
-        db.close()
-        logger.error(f"Login error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-        db.close()
-
-
-@app.post("/init-db")
-def init_db():
-    """Initialize users table (run once)"""
-    if not AuthSessionLocal:
-        raise HTTPException(status_code=503, detail="Database not configured. Database initialization unavailable.")
-    
-    db = AuthSessionLocal()
-    
-    try:
-        # Create users table if not exists
-        db.execute(text("""
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL,
-                full_name VARCHAR(255),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """))
-        
-        # Create index on email
-        db.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)
-        """))
-        
-        db.commit()
-        logger.info("✓ Database tables initialized")
-        
-        return {"message": "Database initialized successfully"}
-        
-    except Exception as e:
-        db.rollback()
-        logger.error(f"DB init error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        db.close()
+    ...
+"""
         
