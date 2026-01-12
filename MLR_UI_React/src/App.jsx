@@ -31,28 +31,24 @@ function App() {
   const brochureInputRef = useRef(null)
   const referenceInputRef = useRef(null)
 
-  // Load user data from localStorage and check authentication
+  // Load user data or use guest mode
   useEffect(() => {
     const loadUserData = () => {
       try {
-        const token = localStorage.getItem('access_token');
         const userDataStr = localStorage.getItem('user_data');
-
-        if (token && userDataStr) {
-          const user = JSON.parse(userDataStr);
-          setUserData(user);
+        if (userDataStr) {
+          setUserData(JSON.parse(userDataStr));
         } else {
-          // Redirect to login if not authenticated
-          window.location.href = '/login';
+          // Default guest user for testing
+          setUserData({ full_name: 'Guest User', email: 'guest@example.com' });
         }
       } catch (err) {
         console.error('Error loading user data:', err);
-        window.location.href = '/login';
+        setUserData({ full_name: 'Guest User', email: 'guest@example.com' });
       } finally {
         setIsLoadingAuth(false);
       }
     };
-
     loadUserData();
   }, []);
 
