@@ -219,7 +219,11 @@ def get_validation_history(authorization: str = Header(None)):
         
         logger.info(f"Fetching validation history for user_id: {user_id}")
         
-        session = SessionLocal()
+        if SessionLocal:
+            session = SessionLocal()
+        else:
+            logger.warning("SessionLocal not initialized, skipping SQL history fetch")
+            return {"history": []}
         
         # Query only THIS USER's brochures
         query = text("""
@@ -547,21 +551,24 @@ async def run_pipeline(
 
             # ---------- UPDATE STATUS (OPTIONAL) ----------
             try:
-                db = SessionLocal()
-                db.execute(
-                    text("""
-                        UPDATE brochures
-                        SET status = :status
-                        WHERE id = :id
-                    """),
-                    {
-                        "status": "completed",
-                        "id": brochure_id
-                    }
-                )
-                db.commit()
-                db.close()
-                logger.info(f"Updated brochure status to completed: {brochure_id}")
+                if SessionLocal:
+                    db = SessionLocal()
+                    db.execute(
+                        text("""
+                            UPDATE brochures
+                            SET status = :status
+                            WHERE id = :id
+                        """),
+                        {
+                            "status": "completed",
+                            "id": brochure_id
+                        }
+                    )
+                    db.commit()
+                    db.close()
+                    logger.info(f"Updated brochure status to completed: {brochure_id}")
+                else:
+                    logger.warning("SessionLocal not initialized, skipping SQL status update")
             except Exception as e:
                 logger.warning(f"Failed to update status in SQL: {str(e)}. Continuing without database.")
 
@@ -588,21 +595,27 @@ async def run_pipeline(
             raise
         except Exception as e:
             # ---------- UPDATE STATUS TO FAILED ----------
-            db = SessionLocal()
-            db.execute(
-                text("""
-                    UPDATE brochures
-                    SET status = :status
-                    WHERE id = :id
-                """),
-                {
-                    "status": "failed",
-                    "id": brochure_id
-                }
-            )
-            db.commit()
-            db.close()
-            logger.error(f"Updated brochure status to failed: {brochure_id}")
+            if SessionLocal:
+                try:
+                    db = SessionLocal()
+                    db.execute(
+                        text("""
+                            UPDATE brochures
+                            SET status = :status
+                            WHERE id = :id
+                        """),
+                        {
+                            "status": "failed",
+                            "id": brochure_id
+                        }
+                    )
+                    db.commit()
+                    db.close()
+                    logger.error(f"Updated brochure status to failed: {brochure_id}")
+                except Exception as db_err:
+                    logger.error(f"Failed to update status to failed in SQL: {str(db_err)}")
+            else:
+                logger.warning("SessionLocal not initialized, skipping SQL status update on failure")
 
             error_trace = traceback.format_exc()
             print(f"\n{'='*70}")
@@ -626,6 +639,9 @@ def signup(user: UserCreate):
     # DEBUG: Print database URL
     import os
     print("DEBUG: DATABASE_URL =", os.getenv("DATABASE_URL"))
+    
+    if not AuthSessionLocal:
+        raise HTTPException(status_code=503, detail="Database not configured. Authentication is unavailable.")
     
     db = AuthSessionLocal()
     
@@ -707,6 +723,9 @@ def signup(user: UserCreate):
 @app.post("/login")
 def login(user: UserLogin):
     """Login user and return access token"""
+    if not AuthSessionLocal:
+        raise HTTPException(status_code=503, detail="Database not configured. Authentication is unavailable.")
+    
     db = AuthSessionLocal()
     
     try:
@@ -761,6 +780,9 @@ def login(user: UserLogin):
 @app.post("/init-db")
 def init_db():
     """Initialize users table (run once)"""
+    if not AuthSessionLocal:
+        raise HTTPException(status_code=503, detail="Database not configured. Database initialization unavailable.")
+    
     db = AuthSessionLocal()
     
     try:
