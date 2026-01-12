@@ -14,3 +14,7 @@ python-dotenv
 google-generativeai
 PyPDF2
 httpx
+
+sqlalchemy
+psycopg2-binary
+pymongo

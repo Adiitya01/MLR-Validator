@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, asdict   
 from io import BytesIO
 import requests
-import fitz  # PyMuPDF
+import fitz 
 from difflib import SequenceMatcher
 import numpy as np
 from typing import List, Dict, Tuple
@@ -30,10 +30,8 @@ logger = logging.getLogger(__name__)
 # Load environment variables from .env file
 load_dotenv()
 
-# ============================================================================
-# RATE LIMIT & RETRY CONFIGURATION
-# ============================================================================
 
+# RATE LIMIT & RETRY CONFIGURATION
 def retry_with_exponential_backoff(
     max_retries: int = 5,
     initial_delay: float = 1.0,
@@ -87,10 +85,7 @@ def json_default(o):
         return o.item()   # Convert NumPy types to normal Python numbers
     return str(o)         # Fallback
 
-
-# ============================================================================
 # PHARMACEUTICAL REFERENCE VALIDATOR - Using Gemini
-# ============================================================================
 
 def validate_statement_with_reference(statement: str, reference_document: bytes, reference_no: str = "") -> Dict:
     """
