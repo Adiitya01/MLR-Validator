@@ -24,7 +24,7 @@ export default function History({ onSelectBrochure }) {
       setLoading(true)
       setError(null)
       // Fetch all validation history with results from single endpoint
-      const apiBaseURL = import.meta.env.REACT_APP_API_URL || 'http://localhost:8000';
+      const apiBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const response = await fetch(`${apiBaseURL}/validation-history`)
       if (!response.ok) {
         throw new Error('Failed to fetch history')

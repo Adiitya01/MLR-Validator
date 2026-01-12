@@ -51,7 +51,7 @@ export default function SignupForm({ onSuccess }) {
     setError('');
 
     try {
-      const apiBaseURL = import.meta.env.REACT_APP_API_URL || 'http://localhost:8000';
+      const apiBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const response = await fetch(`${apiBaseURL}/signup`, {
         method: 'POST',
         headers: {

@@ -101,7 +101,7 @@ from Superscript import extract_footnotes, extract_drug_superscript_table_data
 from conversion import build_validation_dataframe, build_validation_rows_special_case
 from Gemini_version import StatementValidator
 from validation_api import drug_router, research_router
-
+3
 
 app = FastAPI(title="MLR validation tool")
 
