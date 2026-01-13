@@ -286,27 +286,37 @@ class GeminiClient:
 
         # Try keys until one works
         for key in unique_keys:
-            try:
-                genai.configure(api_key=key)
-                client = genai.GenerativeModel(model_name=self.model)
-                
-                # Test the key immediately to ensure it's valid (not leaked)
-                # We use a minimal token count to keep it fast/cheap
-                client.generate_content("ping", generation_config={"max_output_tokens": 1})
-                
-                # If we get here, the key is valid
-                self.client = client
-                self.api_key = key
-                masked_key = f"...{key[-4:]}" if len(key) > 4 else "***"
-                logger.info(f"GeminiClient initialized successfully with key ending in {masked_key}")
-                return
-                
-            except Exception as e:
-                masked_key = f"...{key[-4:]}" if len(key) > 4 else "***"
-                logger.warning(f"API key ending in {masked_key} failed validation: {str(e)}")
-                continue
+            # List of models to try in order of preference
+            models_to_try = [self.model]
+            if "pro" in self.model:
+                models_to_try.extend(["gemini-2.5-pro", "gemini-1.5-pro", "gemini-2.0-flash"])
+            else:
+                models_to_try.extend(["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"])
+            
+            # Remove duplicates while preserving order
+            models_to_try = [m for i, m in enumerate(models_to_try) if m not in models_to_try[:i]]
+
+            for model_id in models_to_try:
+                try:
+                    logger.info(f"Attempting to initialize Gemini with model: {model_id}")
+                    genai.configure(api_key=key)
+                    client = genai.GenerativeModel(model_name=model_id)
+                    
+                    # Test the model with a simple ping
+                    client.generate_content("ping", generation_config={"max_output_tokens": 1})
+                    
+                    # If we get here, the key AND model are valid
+                    self.client = client
+                    self.api_key = key
+                    self.model = model_id # Update to the working model
+                    masked_key = f"...{key[-4:]}" if len(key) > 4 else "***"
+                    logger.info(f"GeminiClient successfully initialized with model {model_id}")
+                    return
+                except Exception as e:
+                    logger.warning(f"Model {model_id} failed: {str(e)}")
+                    continue
         
-        logger.error("All available Gemini API keys failed validation")
+        logger.error("All available Gemini API keys and models failed validation")
         self.client = None
 
     def upload_pdf_to_gemini(self, pdf_bytes: bytes, filename: str):

@@ -24,7 +24,10 @@ def configure_gemini(use_case: str):
     try:
         # Check if we have the new google-genai library
         if hasattr(genai, 'Client'):
-            return genai.Client(api_key=api_key)
+            client = genai.Client(api_key=api_key)
+            # No verification here to avoid slowing down, 
+            # fallbacks happen in Superscript.py
+            return client
         else:
             # Fallback for google-generativeai
             genai.configure(api_key=api_key)

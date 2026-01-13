@@ -74,24 +74,39 @@ For each table in the PDF, do the following:
 - Do not include markdown or explanations, only the JSON array.
 '''
 
-    # Detect if we're using the new Client or the legacy genai
-    if hasattr(client, "models"):
-        # New API (google-genai)
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[
-                types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
-                prompt
-            ],
-            config=types.GenerateContentConfig(temperature=0.0)
-        )
-    else:
-        # Legacy API (google-generativeai)
-        model = client.GenerativeModel("gemini-2.5-flash")
-        response = model.generate_content([
-            {"mime_type": "application/pdf", "data": pdf_bytes},
-            prompt
-        ])
+    models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+    response = None
+    last_error = None
+
+    for model_id in models_to_try:
+        try:
+            # Detect if we're using the new Client or the legacy genai
+            if hasattr(client, "models"):
+                # New API (google-genai)
+                response = client.models.generate_content(
+                    model=model_id,
+                    contents=[
+                        types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
+                        prompt
+                    ],
+                    config=types.GenerateContentConfig(temperature=0.0)
+                )
+            else:
+                # Legacy API (google-generativeai)
+                model = client.GenerativeModel(model_name=model_id)
+                response = model.generate_content([
+                    {"mime_type": "application/pdf", "data": pdf_bytes},
+                    prompt
+                ])
+            
+            if response:
+                break
+        except Exception as e:
+            last_error = e
+            continue
+    
+    if not response:
+        raise RuntimeError(f"All models failed for extraction: {str(last_error)}")
 
     resp = response.text.strip()
     # Clean up Markdown code blocks if present
@@ -238,27 +253,39 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
     - If the page has no citations and no tables, return an empty array [].
     '''
 
-    # Detect if we're using the new Client or the legacy genai
-    if hasattr(client, "models"):
-        # New API
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[
-                types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
-                prompt
-            ],
-            config=types.GenerateContentConfig(temperature=0.0)
-        )
-    else:
-        # Legacy API
-        model = client.GenerativeModel("gemini-2.5-flash")
-        response = model.generate_content([
-            {"mime_type": "application/pdf", "data": pdf_bytes},
-            prompt
-        ])
+    models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+    response = None
+    last_error = None
+
+    for model_id in models_to_try:
+        try:
+            if hasattr(client, "models"):
+                # New API (google-genai)
+                response = client.models.generate_content(
+                    model=model_id,
+                    contents=[
+                        types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
+                        prompt
+                    ],
+                    config=types.GenerateContentConfig(temperature=0.0)
+                )
+            else:
+                # Legacy API (google-generativeai)
+                model = client.GenerativeModel(model_name=model_id)
+                response = model.generate_content([
+                    {"mime_type": "application/pdf", "data": pdf_bytes},
+                    prompt
+                ])
+            if response:
+                break
+        except Exception as e:
+            last_error = e
+            continue
+    
+    if not response:
+        raise RuntimeError(f"All models failed for extraction: {str(last_error)}")
 
     resp = response.text.strip()
-
     # Clean up Markdown code blocks if present
     if resp.startswith("```"):
         m = re.search(r"```(?:[^\n]*\n)?(.*)```$", resp, re.S)
@@ -346,69 +373,30 @@ def main():
         pdf_path = input("Enter path to PDF: ").strip()
 
     if not os.path.isfile(pdf_path):
-        sys.exit(1)
-
-    result = extract_footnotes(pdf_path)
-    
-    # Output complete JSON with references
-    output_json = json.dumps(result.model_dump(), indent=2)
-
-    save_json(
-    data=result.model_dump(),
-    folder="extracted_json",
-    filename=os.path.basename(pdf_path).replace(".pdf", "_extracted.json")
-    )
-
-    # optionally save to file
-    output_file = os.path.splitext(pdf_path)[0] + "_extracted.json"
-    try:
-        with open(output_file, "w", encoding="utf-8") as f:
-            f.write(output_json)
-    except Exception as e:
-        pass
-    
-
-if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        pdf_path = sys.argv[1]
-    else:
-        pdf_path = input("Enter path to PDF: ").strip()
-
-    if not os.path.exists(pdf_path):
         print(f"File not found: {pdf_path}")
         sys.exit(1)
+
+    print(f"Processing: {pdf_path}")
     
-    print("\n" + "="*60)
-    print("  PROCESSING PDF")
-    print("="*60)
-    print(f"📂 File: {os.path.basename(pdf_path)}")
-    print(f"📁 Path: {pdf_path}\n")
-    
+    # Check if we should run drug extraction or standard extraction
+    # Defaulting to drug extraction if it exists in the file
     try:
-        results = extract_drug_superscript_table_data(pdf_path)
-        
-        if not results:
-            print("\n⚠️  No results found.\n")
+        if "extract_drug_superscript_table_data" in globals():
+            result = extract_drug_superscript_table_data(pdf_path)
         else:
-            print(f"\n✅ Total records found: {len(results)}\n")
-            for idx, result in enumerate(results, 1):
-                print(f"📋 Record #{idx}")
-                print("-" * 60)
-                for key, value in result.items():
-                    print(f"   {key}: {value}")
-                print()
+            result = extract_footnotes(pdf_path)
+            if hasattr(result, "model_dump"):
+                result = result.model_dump()
         
         output_folder = "extracted_json"
         output_filename = os.path.basename(pdf_path).replace(".pdf", "_extracted.json")
-        output_path = save_json(results, folder=output_folder, filename=output_filename)
+        save_json(data=result, folder=output_folder, filename=output_filename)
         
-        if output_path:
-            print("\n" + "="*60)
-            print("  OUTPUT SAVED")
-            print("="*60)
-            print(f"✅ Successfully saved to:\n   {output_path}\n")
+        print(f"✅ Extraction complete. Saved to {output_folder}/{output_filename}")
+        print(json.dumps(result, indent=2)[:500] + "...")
+        
     except Exception as e:
-        print("\n" + "="*60)
-        print("  ERROR")
-        print("="*60)
-        print(f"❌ Error: {str(e)}\n")
+        print(f"❌ Error: {e}")
+
+if __name__ == "__main__":
+    main()
