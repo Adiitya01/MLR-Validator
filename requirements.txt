@@ -1,0 +1,8 @@
+requests
+beautifulsoup4
+readability-lxml
+python-dotenv
+google-generativeai
+pydantic
+fastapi
+uvicorn
