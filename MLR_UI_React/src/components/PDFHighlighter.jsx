@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import * as pdfjsLib from 'pdfjs-dist'
 import '../styles/PDFHighlighter.css'
- 
+
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min?url'
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker
 
@@ -11,7 +11,7 @@ export default function PDFHighlighter({ pdfFile, validationResults }) {
   const [loading, setLoading] = useState(false)
   const [statementsOnPage, setStatementsOnPage] = useState([])
   const [selectedStatement, setSelectedStatement] = useState(null)
- 
+
   const canvasRef = useRef(null)
   const containerRef = useRef(null)
   const overlayRef = useRef(null)
@@ -20,21 +20,21 @@ export default function PDFHighlighter({ pdfFile, validationResults }) {
   // Extract only the statement part (remove title)
   const getCleanStatement = (fullStatement) => {
     if (!fullStatement) return fullStatement
-    
+
     const text = String(fullStatement).trim()
-    
+
     // Split by period and take everything after first sentence (which is title)
     const parts = text.split('. ')
     if (parts.length > 1) {
       return parts.slice(1).join('. ').trim()
     }
-    
+
     return text
   }
- 
+
   useEffect(() => {
     if (!pdfFile) return
- 
+
     const load = async () => {
       setLoading(true)
       const buffer = await pdfFile.arrayBuffer()
@@ -44,13 +44,13 @@ export default function PDFHighlighter({ pdfFile, validationResults }) {
       setCurrentPage(1)
       setLoading(false)
     }
- 
+
     load()
   }, [pdfFile])
- 
+
   useEffect(() => {
     if (!pdfDocRef.current) return
- 
+
     const render = async () => {
       setLoading(true)
 
@@ -83,16 +83,16 @@ export default function PDFHighlighter({ pdfFile, validationResults }) {
         statements: pageStatements,
         viewport
       })
- 
+
       setLoading(false)
     }
- 
+
     render()
   }, [currentPage, validationResults])
- 
+
   const drawCallouts = ({ textContent, statements, viewport }) => {
     console.log(`Processing ${statements.length} statements on page ${currentPage}`)
-    
+
     if (overlayRef.current) overlayRef.current.remove()
 
     const overlay = document.createElement('div')
@@ -157,10 +157,10 @@ export default function PDFHighlighter({ pdfFile, validationResults }) {
       console.log(`Processing statement ${idx + 1}`)
       // CLEAN STATEMENT FIRST - remove title
       const cleanedStatement = getCleanStatement(statement.statement)
-      
+
       // MATCH ONLY THE CLEANED STATEMENT (without title)
       let matches = findStatementMatch(cleanedStatement, textContent.items)
-      
+
       if (!matches || !matches.length) {
         const circle = document.createElement('div')
         circle.className = 'statement-circle not-found'
@@ -208,9 +208,8 @@ export default function PDFHighlighter({ pdfFile, validationResults }) {
       )
 
       const circle = document.createElement('div')
-      circle.className = `statement-circle ${
-        statement.validation_result === 'Supported' ? 'supported' : 'not-supported'
-      }`
+      circle.className = `statement-circle ${statement.validation_result === 'Supported' ? 'supported' : 'not-supported'
+        }`
       circle.textContent = idx + 1
       circle.style.cssText = `
         position: absolute;
@@ -219,23 +218,20 @@ export default function PDFHighlighter({ pdfFile, validationResults }) {
         width: 17px;
         height: 17px;
         border-radius: 50%;
-        background: ${
-          statement.validation_result === 'Supported' ||
+        background: ${statement.validation_result === 'Supported' ||
           statement.validation_result === 'Strongly Supported'
-            ? '#dcfce7'
-            : '#fee2e2'
+          ? '#dcfce7'
+          : '#fee2e2'
         };
-        border: 2px solid ${
-          statement.validation_result === 'Supported' ||
+        border: 2px solid ${statement.validation_result === 'Supported' ||
           statement.validation_result === 'Strongly Supported'
-            ? '#22c55e'
-            : '#ef4444'
+          ? '#22c55e'
+          : '#ef4444'
         };
-        color: ${
-          statement.validation_result === 'Supported' ||
+        color: ${statement.validation_result === 'Supported' ||
           statement.validation_result === 'Strongly Supported'
-            ? '#22c55e'
-            : '#ef4444'
+          ? '#22c55e'
+          : '#ef4444'
         };
         display: flex;
         align-items: center;
@@ -264,15 +260,16 @@ export default function PDFHighlighter({ pdfFile, validationResults }) {
     overlay.appendChild(fragment)
     containerRef.current.appendChild(overlay)
     overlayRef.current = overlay
-    
+
     console.log(`Completed validation for ${statements.length} statements`)
   }
- 
+
   return (
     <div className="pdf-highlighter">
       {!pdfFile ? (
         <div style={{
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           height: '300px',
@@ -311,160 +308,160 @@ export default function PDFHighlighter({ pdfFile, validationResults }) {
             <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
           </div>
 
-        {/* Statement Summary Panel */}
-        {selectedStatement && (
-          <div style={{
-            width: '400px',
-            height: '700px',
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            backgroundColor: '#f9fafb',
-            overflow: 'auto',
-            padding: '20px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>Statement Details</h3>
-              <button
-                onClick={() => setSelectedStatement(null)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '20px',
-                  cursor: 'pointer',
-                  color: '#666'
-                }}
-              >
-                ×
-              </button>
-            </div>
+          {/* Statement Summary Panel */}
+          {selectedStatement && (
+            <div style={{
+              width: '400px',
+              height: '700px',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              backgroundColor: '#f9fafb',
+              overflow: 'auto',
+              padding: '20px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>Statement Details</h3>
+                <button
+                  onClick={() => setSelectedStatement(null)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '20px',
+                    cursor: 'pointer',
+                    color: '#666'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
 
-            {/* Status Badge */}
-            <div style={{ marginBottom: '16px' }}>
-              <span style={{
-                display: 'inline-block',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                fontSize: '12px',
-                fontWeight: 600,
-                backgroundColor: getStatusBackgroundColor(selectedStatement.validation_result),
-                color: getStatusTextColor(selectedStatement.validation_result)
-              }}>
-                {selectedStatement.validation_result}
-              </span>
-            </div>
-
-            {/* Statement - SHOW CLEANED VERSION */}
-            <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: '#666', textTransform: 'uppercase' }}>Statement</h4>
-              <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5', color: '#333' }}>
-                {getCleanStatement(selectedStatement.statement)}
-              </p>
-            </div>
-
-            {/* Confidence Score */}
-            <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: '#666', textTransform: 'uppercase' }}>Confidence</h4>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{
-                  flex: 1,
-                  height: '8px',
-                  backgroundColor: '#e5e7eb',
-                  borderRadius: '4px',
-                  overflow: 'hidden'
+              {/* Status Badge */}
+              <div style={{ marginBottom: '16px' }}>
+                <span style={{
+                  display: 'inline-block',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  backgroundColor: getStatusBackgroundColor(selectedStatement.validation_result),
+                  color: getStatusTextColor(selectedStatement.validation_result)
                 }}>
-                  <div style={{
-                    height: '100%',
-                    width: `${(selectedStatement.confidence_score || 0) * 100}%`,
-                    backgroundColor: (selectedStatement.confidence_score || 0) > 0.7 ? '#22c55e' : '#f59e0b',
-                    transition: 'width 0.3s ease'
-                  }} />
-                </div>
-                <span style={{ fontSize: '14px', fontWeight: 600, minWidth: '40px' }}>
-                  {(selectedStatement.confidence_score || 0).toFixed(2)}
+                  {selectedStatement.validation_result}
                 </span>
               </div>
-            </div>
 
-            {/* Reference */}
-            {selectedStatement.reference && (
+              {/* Statement - SHOW CLEANED VERSION */}
               <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: '#666', textTransform: 'uppercase' }}>Reference</h4>
-                <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5', color: '#555' }}>
-                  {selectedStatement.reference}
+                <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: '#666', textTransform: 'uppercase' }}>Statement</h4>
+                <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5', color: '#333' }}>
+                  {getCleanStatement(selectedStatement.statement)}
                 </p>
               </div>
-            )}
 
-            {/* Matched Paper */}
-            {selectedStatement.matched_paper && (
+              {/* Confidence Score */}
               <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: '#666', textTransform: 'uppercase' }}>Matched Paper</h4>
-                <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5', color: '#555' }}>
-                  {selectedStatement.matched_paper}
-                </p>
-              </div>
-            )}
-
-            {/* Evidence */}
-            {selectedStatement.matched_evidence && (
-              <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: '#666', textTransform: 'uppercase' }}>Evidence Found</h4>
-                <div style={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '6px',
-                  padding: '12px',
-                  fontSize: '13px',
-                  lineHeight: '1.6',
-                  color: '#333',
-                  maxHeight: '150px',
-                  overflow: 'auto'
-                }}>
-                  {selectedStatement.matched_evidence}
+                <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: '#666', textTransform: 'uppercase' }}>Confidence</h4>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{
+                    flex: 1,
+                    height: '8px',
+                    backgroundColor: '#e5e7eb',
+                    borderRadius: '4px',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      height: '100%',
+                      width: `${(selectedStatement.confidence_score || 0) * 100}%`,
+                      backgroundColor: (selectedStatement.confidence_score || 0) > 0.7 ? '#22c55e' : '#f59e0b',
+                      transition: 'width 0.3s ease'
+                    }} />
+                  </div>
+                  <span style={{ fontSize: '14px', fontWeight: 600, minWidth: '40px' }}>
+                    {(selectedStatement.confidence_score || 0).toFixed(2)}
+                  </span>
                 </div>
               </div>
-            )}
 
-            {/* Page Location */}
-            {selectedStatement.page_location && (
-              <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: '#666', textTransform: 'uppercase' }}>Page Location</h4>
-                <p style={{ margin: 0, fontSize: '14px', color: '#555' }}>
-                  {selectedStatement.page_location}
-                </p>
-              </div>
-            )}
+              {/* Reference */}
+              {selectedStatement.reference && (
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: '#666', textTransform: 'uppercase' }}>Reference</h4>
+                  <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5', color: '#555' }}>
+                    {selectedStatement.reference}
+                  </p>
+                </div>
+              )}
 
-            {/* Matching Method */}
-            {selectedStatement.matching_method && (
-              <div>
-                <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: '#666', textTransform: 'uppercase' }}>Matching Method</h4>
-                <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.5', color: '#555' }}>
-                  {selectedStatement.matching_method}
-                </p>
-              </div>
-            )}
+              {/* Matched Paper */}
+              {selectedStatement.matched_paper && (
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: '#666', textTransform: 'uppercase' }}>Matched Paper</h4>
+                  <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5', color: '#555' }}>
+                    {selectedStatement.matched_paper}
+                  </p>
+                </div>
+              )}
+
+              {/* Evidence */}
+              {selectedStatement.matched_evidence && (
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: '#666', textTransform: 'uppercase' }}>Evidence Found</h4>
+                  <div style={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '6px',
+                    padding: '12px',
+                    fontSize: '13px',
+                    lineHeight: '1.6',
+                    color: '#333',
+                    maxHeight: '150px',
+                    overflow: 'auto'
+                  }}>
+                    {selectedStatement.matched_evidence}
+                  </div>
+                </div>
+              )}
+
+              {/* Page Location */}
+              {selectedStatement.page_location && (
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: '#666', textTransform: 'uppercase' }}>Page Location</h4>
+                  <p style={{ margin: 0, fontSize: '14px', color: '#555' }}>
+                    {selectedStatement.page_location}
+                  </p>
+                </div>
+              )}
+
+              {/* Matching Method */}
+              {selectedStatement.matching_method && (
+                <div>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: '#666', textTransform: 'uppercase' }}>Matching Method</h4>
+                  <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.5', color: '#555' }}>
+                    {selectedStatement.matching_method}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Controls */}
+          <div className="pdf-controls" style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>
+              ← Prev
+            </button>
+            <span>
+              Page {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() =>
+                setCurrentPage(p => Math.min(totalPages, p + 1))
+              }
+            >
+              Next →
+            </button>
           </div>
-        )}
-        
-        {/* Controls */}
-        <div className="pdf-controls" style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
-          <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>
-            ← Prev
-          </button>
-          <span>
-            Page {currentPage} / {totalPages}
-          </span>
-          <button
-            onClick={() =>
-              setCurrentPage(p => Math.min(totalPages, p + 1))
-            }
-          >
-            Next →
-          </button>
         </div>
-      </div>
       )}
     </div>
   )
