@@ -176,7 +176,7 @@ CRITICAL:
             pdf_file = genai.upload_file(tmp_path, mime_type="application/pdf")
             
             # Send validation request
-            client = genai.GenerativeModel("gemini-2.5-flash")
+            client = genai.GenerativeModel("gemini-3-pro-preview")
             response = client.generate_content([
                 validation_prompt,
                 pdf_file
@@ -251,7 +251,7 @@ class ValidationResult:
     
 class GeminiClient:
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-2.5-flash", base_url: str = "https://generativelanguage.googleapis.com"):
+    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-3-pro-preview", base_url: str = "https://generativelanguage.googleapis.com"):
 
         self.model = model
         self.base_url = base_url.rstrip('/')
