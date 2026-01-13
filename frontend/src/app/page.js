@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export default function Home() {
   const [url, setUrl] = useState('');
   const [points, setPoints] = useState('');
@@ -41,7 +43,7 @@ export default function Home() {
     addToast("Initializing Global Analysis...", "info");
 
     try {
-      const response = await fetch('http://localhost:8000/analyze', {
+      const response = await fetch(`${API_BASE_URL}/analyze`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,7 +83,7 @@ export default function Home() {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/evaluate-prompt', {
+      const response = await fetch(`${API_BASE_URL}/evaluate-prompt`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -125,7 +127,7 @@ export default function Home() {
     setEvaluatingAll(true);
     addToast("Starting Full Visibility Audit...", "info");
     try {
-      const response = await fetch('http://localhost:8000/evaluate-all', {
+      const response = await fetch(`${API_BASE_URL}/evaluate-all`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
