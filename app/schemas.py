@@ -18,6 +18,7 @@ class GeneratedPrompt(BaseModel):
 
 class EvaluationMetric(BaseModel):
     brand_present: bool
+    url_cited: bool = Field(False, description="Whether the company URL is cited/linked in the response")
     recommendation_rank: Optional[int] = None  # 1 if first, 2 if second, etc. None if not present
     accuracy_score: float  # 0 to 1
     sentiment: str  # Positive, Neutral, Negative

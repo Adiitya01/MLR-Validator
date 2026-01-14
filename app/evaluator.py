@@ -72,14 +72,16 @@ Model Response:
 
 Audit requirements for "{company.company_name}":
 1. brand_present: Is the company mentioned? (true/false)
-2. recommendation_rank: If mentioned, what is its position in the list (1, 2, 3...)? If not mentioned, null.
-3. accuracy_score: How accurately did the model describe the company's offerings? (0.0 to 1.0)
-4. sentiment: What is the tone regarding this company? (Positive, Neutral, Negative)
-5. competitors_mentioned: List other companies mentioned in the same response.
+2. url_cited: Is the company's website URL mentioned or linked? (true/false).
+3. recommendation_rank: If mentioned, what is its position in the list (1, 2, 3...)? If not mentioned, null.
+4. accuracy_score: How accurately did the model describe the company's offerings? (0.0 to 1.0)
+5. sentiment: What is the tone regarding this company? (Positive, Neutral, Negative)
+6. competitors_mentioned: List other companies mentioned in the same response.
 
 Return valid JSON:
 {{
   "brand_present": bool,
+  "url_cited": bool,
   "recommendation_rank": int or null,
   "accuracy_score": float,
   "sentiment": "Positive|Neutral|Negative",

@@ -19,6 +19,7 @@ export default function Home() {
   const [selectedDetail, setSelectedDetail] = useState(null); // For the persistent modal
   const [toasts, setToasts] = useState([]); // For notifications
   const [error, setError] = useState(null);
+  const [manualPromptText, setManualPromptText] = useState('');
 
   const addToast = (message, type = 'info') => {
     const id = Date.now();
@@ -26,6 +27,23 @@ export default function Home() {
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, 3000);
+  };
+
+  const handleAddManualPrompt = () => {
+    if (!manualPromptText.trim()) return;
+
+    const newPrompt = {
+      prompt_text: manualPromptText,
+      intent_category: "Manual Custom"
+    };
+
+    setResult(prev => ({
+      ...prev,
+      prompts: [newPrompt, ...prev.prompts]
+    }));
+
+    setManualPromptText('');
+    addToast("Custom prompt added!", "success");
   };
 
   const handleAnalyze = async () => {
@@ -238,6 +256,25 @@ export default function Home() {
             </div>
           )}
 
+          <div style={{ marginBottom: '32px', background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <h3 style={{ fontSize: '1.1rem', marginBottom: '16px', color: 'var(--primary-light)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>⚡</span> Test Your Own Prompt
+            </h3>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <input
+                type="text"
+                placeholder="Enter a custom query (e.g., 'Best enterprise VR solutions for manufacturing')"
+                value={manualPromptText}
+                onChange={(e) => setManualPromptText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddManualPrompt()}
+                style={{ flex: 1 }}
+              />
+              <button onClick={handleAddManualPrompt} className="secondary-btn" style={{ whiteSpace: 'nowrap', background: 'var(--primary)', borderColor: 'var(--primary)' }}>
+                + Add Prompt
+              </button>
+            </div>
+          </div>
+
           <div style={{ marginBottom: '16px' }}>
             <h3 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>Suggested AI Test Prompts</h3>
             <p style={{ color: '#a1a1aa' }}>Use these prompts to see how AI models perceive your brand.</p>
@@ -280,7 +317,8 @@ export default function Home() {
                   {(evalResults[index] || googleEvalResults[index]) && (
                     <div className="eval-result-box" style={{ animation: 'fadeIn 0.3s ease', padding: '8px', fontSize: '0.7rem' }}>
                       <div style={{ color: 'var(--primary-light)' }}>
-                        Rank: {evalResults[index]?.evaluation?.recommendation_rank || 'N/A'} | GS: {googleEvalResults[index]?.evaluation?.recommendation_rank || 'N/A'}
+                        Rank: {evalResults[index]?.evaluation?.recommendation_rank || 'N/A'}{evalResults[index]?.evaluation?.url_cited && ' 🔗'} |
+                        GS: {googleEvalResults[index]?.evaluation?.recommendation_rank || 'N/A'}{googleEvalResults[index]?.evaluation?.url_cited && ' 🔗'}
                       </div>
                     </div>
                   )}
@@ -339,9 +377,14 @@ export default function Home() {
                   {evalResults[selectedDetail.index] ? (
                     <div className="response-full">
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <span style={{ color: evalResults[selectedDetail.index]?.evaluation?.brand_present ? 'var(--accent)' : '#ef4444', fontWeight: 700, fontSize: '0.8rem' }}>
-                          {evalResults[selectedDetail.index]?.evaluation?.brand_present ? '✓ Mentioned' : '✗ Missing'}
-                        </span>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <span style={{ color: evalResults[selectedDetail.index]?.evaluation?.brand_present ? 'var(--accent)' : '#ef4444', fontWeight: 700, fontSize: '0.8rem' }}>
+                            {evalResults[selectedDetail.index]?.evaluation?.brand_present ? '✓ Mentioned' : '✗ Missing'}
+                          </span>
+                          {evalResults[selectedDetail.index]?.evaluation?.url_cited && (
+                            <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.8rem' }}>🔗 Linked</span>
+                          )}
+                        </div>
                         <span style={{ color: 'var(--primary-light)', fontWeight: 700, fontSize: '0.8rem' }}>Rank: {evalResults[selectedDetail.index]?.evaluation?.recommendation_rank || 'N/A'}</span>
                       </div>
                       <div style={{ fontSize: '0.9rem', lineHeight: 1.6 }}>{evalResults[selectedDetail.index].response_text}</div>
@@ -357,9 +400,14 @@ export default function Home() {
                   {googleEvalResults[selectedDetail.index] ? (
                     <div className="response-full" style={{ borderLeft: '2px solid var(--accent)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <span style={{ color: googleEvalResults[selectedDetail.index]?.evaluation?.brand_present ? 'var(--accent)' : '#ef4444', fontWeight: 700, fontSize: '0.8rem' }}>
-                          {googleEvalResults[selectedDetail.index]?.evaluation?.brand_present ? '✓ Mentioned' : '✗ Missing'}
-                        </span>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <span style={{ color: googleEvalResults[selectedDetail.index]?.evaluation?.brand_present ? 'var(--accent)' : '#ef4444', fontWeight: 700, fontSize: '0.8rem' }}>
+                            {googleEvalResults[selectedDetail.index]?.evaluation?.brand_present ? '✓ Mentioned' : '✗ Missing'}
+                          </span>
+                          {googleEvalResults[selectedDetail.index]?.evaluation?.url_cited && (
+                            <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.8rem' }}>🔗 Linked</span>
+                          )}
+                        </div>
                         <span style={{ color: 'var(--primary-light)', fontWeight: 700, fontSize: '0.8rem' }}>Rank: {googleEvalResults[selectedDetail.index]?.evaluation?.recommendation_rank || 'N/A'}</span>
                       </div>
                       <div style={{ fontSize: '0.9rem', lineHeight: 1.6 }}>{googleEvalResults[selectedDetail.index].response_text}</div>
