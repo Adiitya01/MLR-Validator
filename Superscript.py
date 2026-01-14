@@ -74,7 +74,7 @@ For each table in the PDF, do the following:
 - Do not include markdown or explanations, only the JSON array.
 '''
 
-    models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash"]
+    models_to_try = ["gemini-2.5-flash", "gemini-2.5-pro"]
     response = None
     last_error = None
 
