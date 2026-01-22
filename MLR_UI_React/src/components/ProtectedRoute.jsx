@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-const ProtectedRoute = ({ children, requiredAuth = true }) => {
+const ProtectedRoute = ({ children, requiredAuth = true, checkVerification = true }) => {
   const [isValid, setIsValid] = useState(null);
   const [userData, setUserData] = useState(null);
 
@@ -51,10 +51,23 @@ const ProtectedRoute = ({ children, requiredAuth = true }) => {
     return null;
   }
 
-  if (!requiredAuth && isValid) {
-    // If this is a public route (like login/signup) and user is already authenticated, redirect to dashboard
+  // Check verification if required
+  if (requiredAuth && isValid && checkVerification && !userData?.is_email_verified) {
     setTimeout(() => {
-      window.location.href = '/dashboard';
+      window.location.href = '/verify-email';
+    }, 100);
+    return null;
+  }
+
+  if (!requiredAuth && isValid) {
+    // If this is a public route (like login/signup) and user is already authenticated
+    // If authenticated but not verified, go to verify-email, else go to dashboard
+    setTimeout(() => {
+      if (!userData?.is_email_verified) {
+        window.location.href = '/verify-email';
+      } else {
+        window.location.href = '/dashboard';
+      }
     }, 100);
     return null;
   }

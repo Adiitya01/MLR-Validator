@@ -15,6 +15,7 @@ class UserResponse(BaseModel):
     id: Union[int, str]  # Accept both int and UUID (converted to string)
     email: str
     full_name: Optional[str] = None
+    is_email_verified: Optional[bool] = False
 
     class Config:
         from_attributes = True

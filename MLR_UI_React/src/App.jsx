@@ -31,20 +31,16 @@ function App() {
   const brochureInputRef = useRef(null)
   const referenceInputRef = useRef(null)
 
-  // Load user data or use guest mode
+  // Load user data
   useEffect(() => {
     const loadUserData = () => {
       try {
         const userDataStr = localStorage.getItem('user_data');
         if (userDataStr) {
           setUserData(JSON.parse(userDataStr));
-        } else {
-          // Default guest user for testing
-          setUserData({ full_name: 'Guest User', email: 'guest@example.com' });
         }
       } catch (err) {
         console.error('Error loading user data:', err);
-        setUserData({ full_name: 'Guest User', email: 'guest@example.com' });
       } finally {
         setIsLoadingAuth(false);
       }
@@ -154,30 +150,60 @@ function App() {
     isValidatingSet(true)
     setValidationResults([])
     setExtractionStatus('extracting')
-    setLiveLog('')
+    setLiveLog('Starting validation job...')
 
     try {
-      const results = await apiClient.runPipeline(brochureFile, referenceFiles.map(f => f.file), validationType)
+      // 1. Start the job and get a Job ID
+      const jobId = await apiClient.runPipeline(brochureFile, referenceFiles.map(f => f.file), validationType)
+      console.log('[DEBUG] Job started with ID:', jobId)
+      setLiveLog(`Job started (ID: ${jobId.substring(0, 8)}). Please wait...`)
 
-      console.log('[DEBUG] API Response Results:', results)
-      if (results && results.length > 0) {
-        console.log('[DEBUG] First result sample:', {
-          statement: results[0].statement,
-          matched_evidence: results[0].matched_evidence,
-          validation_result: results[0].validation_result,
-          matched_paper: results[0].matched_paper
-        })
+      // 2. Poll for status
+      let jobFinished = false
+      let retryCount = 0
+      const maxRetries = 300 // 10 minutes max (2s * 300)
+
+      while (!jobFinished && retryCount < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 2000)) // Wait 2 seconds between checks
+
+        try {
+          const statusData = await apiClient.checkJobStatus(jobId)
+          console.log('[DEBUG] Job Status:', statusData.state)
+
+          if (statusData.state === 'completed') {
+            setLiveLog('Processing complete! Fetching results...')
+            jobFinished = true
+
+            // 3. Fetch final results
+            const fullResults = await apiClient.getResults(jobId)
+            const results = fullResults.results || []
+
+            if (results.length === 0) {
+              alert('Validation completed but no results were generated.')
+              setExtractionStatus('error')
+            } else {
+              setExtractedStatements(results)
+              setValidationResults(results)
+              setExtractionStatus('success')
+              setLiveLog('Validation completed successfully')
+            }
+          } else if (statusData.state === 'failed') {
+            throw new Error(statusData.error_message || 'Background job failed')
+          } else {
+            // Still processing
+            setLiveLog(`Validating... (${statusData.state})`)
+          }
+        } catch (err) {
+          console.error('Polling error:', err)
+          // Don't stop on single network error, just keep trying until maxRetries
+        }
+
+        retryCount++
       }
 
-      if (!results || results.length === 0) {
-        alert('Pipeline completed but no validation results were generated')
-        setExtractionStatus('error')
-        return
+      if (!jobFinished) {
+        throw new Error('Validation timed out. Please check History later.')
       }
-
-      setExtractedStatements(results)
-      setValidationResults(results)
-      setExtractionStatus('success')
 
       // Refresh History component after validation
       const historyElement = document.querySelector('[data-history-refresh]')
@@ -189,8 +215,8 @@ function App() {
       console.error('Pipeline error:', error)
       alert(`Error running pipeline: ${error.message}`)
       setExtractionStatus('error')
+      setLiveLog(`Error: ${error.message}`)
     } finally {
-      setLiveLog('Validation completed')
       isValidatingSet(false)
     }
   }
@@ -495,19 +521,34 @@ function App() {
                         {isValidating ? (
                           <>
                             <span className="spinner"></span>
-                            Validating...
+                            Processing Pipeline...
                           </>
                         ) : (
                           'Start Validation'
                         )}
                       </button>
+
                       {isValidating && liveLog && (
-                        <div style={{
-                          marginTop: '12px',
-                          fontSize: '14px',
-                          color: '#555',
-                          textAlign: 'center'
+                        <div className="status-pill-container" style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '8px 16px',
+                          backgroundColor: '#eff6ff',
+                          borderRadius: '20px',
+                          border: '1px solid #dbeafe',
+                          color: '#2563eb',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          boxShadow: '0 2px 4px rgba(37, 99, 235, 0.05)',
+                          animation: 'pulseStatus 2s infinite'
                         }}>
+                          <span style={{
+                            width: '8px',
+                            height: '8px',
+                            backgroundColor: '#2563eb',
+                            borderRadius: '50%'
+                          }}></span>
                           {liveLog}
                         </div>
                       )}

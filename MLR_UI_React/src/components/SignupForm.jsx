@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import '../styles/Auth.css';
+import logo from '../assets/ethosh-logo.svg';
 
 export default function SignupForm({ onSuccess }) {
   const [formData, setFormData] = useState({
@@ -97,8 +98,9 @@ export default function SignupForm({ onSuccess }) {
   if (success) {
     return (
       <div className="auth-container">
-        <div className="auth-card success">
-          <div className="success-icon">✓</div>
+        <img src={logo} alt="Logo" className="auth-logo-top" />
+        <div className="auth-card success" style={{ textAlign: 'center', color: 'white' }}>
+          <div className="success-icon" style={{ fontSize: '64px', marginBottom: '20px' }}>✓</div>
           <h2 style={{ margin: '0 0 10px 0', fontSize: '24px' }}>Account Created!</h2>
           <p style={{ margin: '0 0 20px 0', fontSize: '16px' }}>
             Welcome, {userData?.full_name || userData?.email}
@@ -113,10 +115,13 @@ export default function SignupForm({ onSuccess }) {
 
   return (
     <div className="auth-container">
+      {/* Logo in top right corner */}
+      <img src={logo} alt="Logo" className="auth-logo-top" />
+
       <div className="auth-card">
         <div className="auth-header">
           <h1>Create Account</h1>
-          <p>Join Professional Citation & Claims Validator</p>
+          <p>Join MLR Validator Tool</p>
         </div>
 
         <form className="auth-form" onSubmit={handleSignup}>

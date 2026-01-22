@@ -25,8 +25,18 @@ export default function History({ onSelectBrochure }) {
       setError(null)
       // Fetch all validation history with results from single endpoint
       const apiBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${apiBaseURL}/validation-history`)
+      const token = localStorage.getItem('access_token');
+
+      const response = await fetch(`${apiBaseURL}/validation-history`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
       if (!response.ok) {
+        if (response.status === 401) {
+          window.location.href = '/login';
+          return;
+        }
         throw new Error('Failed to fetch history')
       }
       const data = await response.json()
@@ -43,8 +53,16 @@ export default function History({ onSelectBrochure }) {
   const handleSelectBrochure = async (brochure) => {
     try {
       setSelectedBrochure(brochure)
-      // Results already loaded from history endpoint, pass them directly
-      onSelectBrochure(brochure, brochure.results || [])
+
+      let results = brochure.results;
+
+      // If results were excluded from history list, fetch them now
+      if (!results || results.length === 0) {
+        const fullData = await apiClient.getResults(brochure.brochure_id);
+        results = fullData.results || [];
+      }
+
+      onSelectBrochure(brochure, results)
     } catch (err) {
       setError('Failed to load results')
       console.error('Error loading results:', err)
@@ -142,12 +160,15 @@ export default function History({ onSelectBrochure }) {
 
       <div className="history-list">
         {brochures.map((brochure, index) => {
-          const isCompleted = brochure.status === 'completed'
-          const isFailed = brochure.status === 'failed'
+          // Robust status check: if status is missing but it's in history, it's likely completed
+          const status = brochure.status || 'completed'
+          const isCompleted = status === 'completed'
+          const isFailed = status === 'failed'
+          const isProcessing = status === 'processing'
 
           return (
             <div
-              key={brochure.id}
+              key={brochure.brochure_id || brochure.id || index}
               className={`history-result-row ${isCompleted ? 'completed' : isFailed ? 'failed' : 'processing'}`}
               onClick={() => {
                 handleSelectBrochure(brochure)
@@ -160,16 +181,18 @@ export default function History({ onSelectBrochure }) {
                 <div className="result-info">
                   <span className="result-index">{index + 1}.</span>
                   <span className="result-text">
-                    {brochure.filename || brochure.name || 'Unknown File'}
+                    {brochure.filename || brochure.brochure_name || brochure.name || 'Unknown File'}
                   </span>
                 </div>
               </div>
               <div className="result-right">
                 <span className="result-confidence">
-                  Confidence: {brochure.avg_confidence ? (brochure.avg_confidence * 100).toFixed(2) : 'N/A'}
+                  Confidence: {(brochure.avg_confidence !== undefined && brochure.avg_confidence !== null)
+                    ? (brochure.avg_confidence * 100).toFixed(1) + '%'
+                    : 'N/A'}
                 </span>
                 <span className={`result-status ${isFailed ? 'not-found' : isCompleted ? 'supported' : 'processing'}`}>
-                  {isCompleted ? 'Completed' : isFailed ? 'Failed' : 'Processing'}
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
                 </span>
               </div>
             </div>

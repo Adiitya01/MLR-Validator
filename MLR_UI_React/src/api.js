@@ -30,7 +30,12 @@ class APIClient {
   // Fetch validation results by brochure_id
   async getResults(brochureId) {
     try {
-      const response = await fetch(`${this.baseUrl}/results/${brochureId}`);
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${this.baseUrl}/validation-results/${brochureId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (!response.ok) {
         throw new Error(`Failed to fetch results: ${response.status}`);
       }
@@ -54,8 +59,26 @@ class APIClient {
     }
   }
 
-  // Run full pipeline: Extract + Validate in one call
-  async runPipeline(brochureFile, referenceFiles, validationType = 'research', onProgress, onResult) {
+  // Check status of a background job
+  async checkJobStatus(jobId) {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${this.baseUrl}/job-status/${jobId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`Status check failed: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Run full pipeline: Starts a background job and returns job_id
+  async runPipeline(brochureFile, referenceFiles, validationType = 'research') {
     if (!this.isConnected && !await this.testConnection()) {
       throw new Error('Backend not connected. Please start the backend first.');
     }
@@ -78,14 +101,14 @@ class APIClient {
       };
 
       // Add auth token if available
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       if (token) {
         options.headers = {
           'Authorization': `Bearer ${token}`
         };
       }
 
-      console.log(`[DEBUG] Calling ${this.baseUrl}/run-pipeline`);
+      console.log(`[DEBUG] Starting Job via ${this.baseUrl}/run-pipeline`);
       const response = await fetch(`${this.baseUrl}/run-pipeline`, options);
 
       if (!response.ok) {
@@ -101,12 +124,12 @@ class APIClient {
 
       const data = await response.json();
 
-      if (!data.results) {
-        throw new Error('No validation results in response');
+      if (!data.job_id) {
+        throw new Error('No job_id in response');
       }
 
-      // Return all results
-      return data.results;
+      // Return the job_id
+      return data.job_id;
 
     } catch (error) {
       throw error;
