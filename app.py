@@ -304,13 +304,9 @@ def get_job_status(job_id: str, current_user: dict = Depends(get_current_user)):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Status check failed: {str(e)}")
+        logger.error(f"Status check failed for {job_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to fetch results for {brochure_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 # ============================================================================

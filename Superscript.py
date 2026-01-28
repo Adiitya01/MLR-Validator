@@ -25,17 +25,15 @@ client = configure_gemini("parsing")
 
 # --- Drug Superscript Table Extraction ---
 def extract_drug_superscript_table_data(pdf_path: str) -> list:
+
     """
     Extracts drug superscript and table data for both table types (as described in requirements).
     """
     with open(pdf_path, "rb") as f:
         pdf_bytes = f.read()
-
         prompt = '''
 You are an expert at extracting and validating drug superscript citations and table data from scientific PDFs.
-
-For each table in the PDF, do the following:
-
+For each table in the PDF, do the following: 
 --- For tables like IMAGE 1 ---
 1. For every row, check if the row name (first column) contains a superscript citation (e.g., ¹, ², ³–⁵).
 2. If a superscript is present in the row name, extract the row name and the superscript number(s).
@@ -51,7 +49,6 @@ For each table in the PDF, do the following:
       "column_name": "<column1>.<column2>.<column3>",
       "mark_type": "<type1>.<type2>.<type3>"
     }
-
 --- For tables like IMAGE 2 ---
 1. For every row, extract:
     - The row name (first column)
@@ -67,13 +64,11 @@ For each table in the PDF, do the following:
       "statement_superscript": "<string or null>",
       "column_name": "<string>"
     }
-
 --- GENERAL RULES ---
 - Return a JSON array of all findings.
 - If no superscripts or marks are found, return an empty array [].
 - Do not include markdown or explanations, only the JSON array.
 '''
-
     models_to_try = ["gemini-2.5-flash", "gemini-2.5-pro"]
     response = None
     last_error = None
@@ -219,11 +214,27 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
         "statement": "<string>"
     }
 
-    ### INSTRUCTIONS FOR SUPERSCRIPTS:
-    1. Identify sentences ending with a superscript citation (e.g., ¹, ², ³⁻⁵).
-    2. Set "superscript_number" to the number(s) found.
-    3. Set "statement" to the sentence associated with the citation.
-    4. Set "heading" to the nearest section title.
+    ### INSTRUCTIONS FOR SUPERSCRIPTS (STRICT VERBATIM):
+    Your goal is to extract content EXACTLY as it appears. 
+    
+    1. **CITATION ON HEADING**: If a superscript citation is found on a section title or heading (e.g., "Introduction¹" or "21. Midline study...²¹"):
+       - **Superscript Number**: Extract the number(s) from the heading.
+       - **Heading**: The heading text itself (without the superscript).
+       - **Statement**: You MUST capture the ENTIRE page content following that heading. 
+         - Specifically, look for and include sections like "Study author(s)", "Study design", "Study objective", "Publication", "Study location", "Study Length", etc.
+         - Do not stop after the citation. Include every paragraph and detail until the next superscript number is found.
+         - If the section continues on the next page, include that too.
+    
+    2. **CITATION IN SENTENCE**: If a superscript citation is found at the end of a sentence:
+       - **Superscript Number**: Extract the number(s).
+       - **Heading**: The nearest section title.
+       - **Statement**: The specific sentence associated with that citation (verbatim).
+
+
+
+
+
+
 
     ### INSTRUCTIONS FOR TABLES (CRITICAL):
     1. Identify any comparison tables or data grids on the page.
@@ -376,14 +387,15 @@ def main():
         print(f"File not found: {pdf_path}")
         sys.exit(1)
 
-    print(f"Processing: {pdf_path}")
-    
-    # Check if we should run drug extraction or standard extraction
-    # Defaulting to drug extraction if it exists in the file
+    # Production Logic: Decide which extraction to run
     try:
-        if "extract_drug_superscript_table_data" in globals():
+        # If your PDF specifically requires the drug Mark/Table logic, use extract_drug_superscript_table_data
+        # Otherwise, the new Footnote/Heading logic is used by default.
+        if "drug" in pdf_path.lower():
+            print("Running Drug Table Extraction...")
             result = extract_drug_superscript_table_data(pdf_path)
         else:
+            print("Running Standard Heading/Footnote Extraction...")
             result = extract_footnotes(pdf_path)
             if hasattr(result, "model_dump"):
                 result = result.model_dump()
