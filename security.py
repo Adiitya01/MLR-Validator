@@ -16,12 +16,16 @@ BCRYPT_ROUNDS = 12
 def get_current_user(token: str = Depends(oauth2_scheme)):
     """Get current user from JWT token"""
     try:
+        # Debugging print
+        print(f"DEBUG: Verifying token: {token[:10]}...")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("user_id")
         if user_id is None:
+            print("DEBUG: Token payload missing user_id")
             raise HTTPException(status_code=401, detail="Invalid authentication credentials")
         return payload
-    except JWTError:
+    except JWTError as e:
+        print(f"DEBUG: JWT Decode Error: {str(e)}")
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
 
 def _prehash_password(password: str) -> str:

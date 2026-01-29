@@ -230,12 +230,6 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
        - **Heading**: The nearest section title.
        - **Statement**: The specific sentence associated with that citation (verbatim).
 
-
-
-
-
-
-
     ### INSTRUCTIONS FOR TABLES (CRITICAL):
     1. Identify any comparison tables or data grids on the page.
     2. For every distinct cell containing data, create a JSON entry.

@@ -2,7 +2,7 @@
 // Backend runs on http://localhost:8000
 
 class APIClient {
-  constructor(baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000') {
+  constructor(baseUrl = import.meta.env.VITE_API_URL || 'https://mlr-backend-api.onrender.com') {
     console.log('[DEBUG] APIClient initialized with baseUrl:', baseUrl);
     this.baseUrl = baseUrl;
     this.isConnected = false;
@@ -111,6 +111,14 @@ class APIClient {
       console.log(`[DEBUG] Starting Job via ${this.baseUrl}/run-pipeline`);
       const response = await fetch(`${this.baseUrl}/run-pipeline`, options);
 
+      if (response.status === 401) {
+        console.error('[AUTH] Token expired or invalid. Redirecting to login...');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user_data');
+        window.location.href = '/login?expired=true';
+        throw new Error('Session expired. Please log in again.');
+      }
+
       if (!response.ok) {
         let errorDetail = '';
         try {
@@ -123,14 +131,11 @@ class APIClient {
       }
 
       const data = await response.json();
-
       if (!data.job_id) {
         throw new Error('No job_id in response');
       }
 
-      // Return the job_id
       return data.job_id;
-
     } catch (error) {
       throw error;
     }
