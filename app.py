@@ -14,16 +14,21 @@ from queue import Queue
 from threading import Lock
 from uuid import uuid4
 from sqlalchemy import text
-from db import SessionLocal
-from datetime import datetime
-from mongo_db import validation_collection, retry_db, validation_collection_v2
-from mongo_schema import StorageOptimizer, ConfidenceScoringOptimizer
-from dataclasses import asdict
+# from db import SessionLocal
+# from mongo_db import validation_collection, retry_db, validation_collection_v2
+# from mongo_schema import StorageOptimizer, ConfidenceScoringOptimizer
 
 # Auth imports
-from database import SessionLocal as AuthSessionLocal, get_db
-from security import hash_password, verify_password, create_access_token, get_current_user
-from schemas import UserCreate, UserLogin, UserResponse, TokenResponse
+# from database import SessionLocal as AuthSessionLocal, get_db
+# from security import hash_password, verify_password, create_access_token, get_current_user
+# from schemas import UserCreate, UserLogin, UserResponse, TokenResponse
+
+# Dummy user for development/bypass
+def get_current_user():
+    return {"user_id": "dummy_user", "email": "test@example.com"}
+
+def get_db():
+    yield None
 
 
 from dotenv import load_dotenv
@@ -163,48 +168,48 @@ def mongodb_status():
         }
 
 
-@app.post("/init-db")
-def init_db(db=Depends(get_db)):
-    """Initialize PostgreSQL database tables"""
-    try:
-        if db is None:
-            raise HTTPException(status_code=500, detail="Database session not available")
-            
-        # Create users table if it doesn't exist
-        db.execute(text("""
-            CREATE TABLE IF NOT EXISTS users (
-                id UUID PRIMARY KEY,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL,
-                full_name VARCHAR(255),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """))
-        
-        # Ensure columns exist (in case table was created with an older version)
-        db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(255)"))
-        db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
-        db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
-        db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_email_verified BOOLEAN DEFAULT FALSE"))
-        db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMP"))
-        
-        # Create OTP Audit Table
-        db.execute(text("""
-            CREATE TABLE IF NOT EXISTS user_otp_audit (
-                id SERIAL PRIMARY KEY,
-                email VARCHAR(255) NOT NULL,
-                action VARCHAR(50) NOT NULL, -- 'SENT', 'VERIFIED', 'FAILED'
-                ip_address VARCHAR(45),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """))
-        
-        db.commit()
-        return {"status": "success", "message": "✓ User database tables initialized and updated"}
-    except Exception as e:
-        logger.error(f"Database initialization failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+# @app.post("/init-db")
+# def init_db(db=Depends(get_db)):
+#     """Initialize PostgreSQL database tables"""
+#     try:
+#         if db is None:
+#             raise HTTPException(status_code=500, detail="Database session not available")
+#             
+#         # Create users table if it doesn't exist
+#         db.execute(text("""
+#             CREATE TABLE IF NOT EXISTS users (
+#                 id UUID PRIMARY KEY,
+#                 email VARCHAR(255) UNIQUE NOT NULL,
+#                 password_hash VARCHAR(255) NOT NULL,
+#                 full_name VARCHAR(255),
+#                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+#                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+#             )
+#         """))
+#         
+#         # Ensure columns exist (in case table was created with an older version)
+#         db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(255)"))
+#         db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
+#         db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
+#         db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_email_verified BOOLEAN DEFAULT FALSE"))
+#         db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMP"))
+#         
+#         # Create OTP Audit Table
+#         db.execute(text("""
+#             CREATE TABLE IF NOT EXISTS user_otp_audit (
+#                 id SERIAL PRIMARY KEY,
+#                 email VARCHAR(255) NOT NULL,
+#                 action VARCHAR(50) NOT NULL, -- 'SENT', 'VERIFIED', 'FAILED'
+#                 ip_address VARCHAR(45),
+#                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+#             )
+#         """))
+#         
+#         db.commit()
+#         return {"status": "success", "message": "✓ User database tables initialized and updated"}
+#     except Exception as e:
+#         logger.error(f"Database initialization failed: {str(e)}")
+#         raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============================================================================
@@ -223,89 +228,89 @@ async def get_latest_logs():
 # FETCH RESULTS FROM MONGODB
 # FETCH VALIDATION HISTORY (ALL DATA IN ONE ENDPOINT)
 
-@app.get("/validation-history")
-def get_validation_history(current_user: dict = Depends(get_current_user)):
-    """Fetch recent validation history from MongoDB for the current user"""
-    try:
-        user_id = current_user.get("user_id")
-        
-        # Fetch 20 most recent brochures from V2 collection for this user
-        cursor = validation_collection_v2.find(
-            {"user_id": user_id}, 
-            {"_id": 0, "results": 0} # Exclude full results to keep list light
-        ).sort("created_at", -1).limit(20)
-        
-        history = list(cursor)
-        
-        # If no history in v2, check legacy
-        if not history:
-            cursor_legacy = validation_collection.find(
-                {}, 
-                {"_id": 0, "results": 0}
-            ).sort("created_at", -1).limit(10)
-            history = list(cursor_legacy)
-            
-        return {"status": "success", "history": history}
-    except Exception as e:
-        logger.error(f"Failed to fetch history: {str(e)}")
-        # Return empty list on failure but don't crash
-        return {"status": "error", "message": str(e), "history": []}
+# @app.get("/validation-history")
+# def get_validation_history(current_user: dict = Depends(get_current_user)):
+#     """Fetch recent validation history from MongoDB for the current user"""
+#     try:
+#         user_id = current_user.get("user_id")
+#         
+#         # Fetch 20 most recent brochures from V2 collection for this user
+#         cursor = validation_collection_v2.find(
+#             {"user_id": user_id}, 
+#             {"_id": 0, "results": 0} # Exclude full results to keep list light
+#         ).sort("created_at", -1).limit(20)
+#         
+#         history = list(cursor)
+#         
+#         # If no history in v2, check legacy
+#         if not history:
+#             cursor_legacy = validation_collection.find(
+#                 {}, 
+#                 {"_id": 0, "results": 0}
+#             ).sort("created_at", -1).limit(10)
+#             history = list(cursor_legacy)
+#             
+#         return {"status": "success", "history": history}
+#     except Exception as e:
+#         logger.error(f"Failed to fetch history: {str(e)}")
+#         # Return empty list on failure but don't crash
+#         return {"status": "error", "message": str(e), "history": []}
 
 
-@app.get("/validation-results/{brochure_id}")
-def get_brochure_results(brochure_id: str, current_user: dict = Depends(get_current_user)):
-    """Fetch all validation statements for a specific brochure (owner only)"""
-    try:
-        user_id = current_user.get("user_id")
-        result = validation_collection_v2.find_one(
-            {"brochure_id": brochure_id, "user_id": user_id},
-            {"_id": 0}
-        )
-        
-        # If not found in v2, check v1
-        if not result:
-            result = validation_collection.find_one(
-                {"brochure_id": brochure_id, "user_id": user_id},
-                {"_id": 0}
-            )
-            
-        if not result:
-            raise HTTPException(status_code=404, detail="Validation results not found")
-            
-        return result
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to fetch results: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+# @app.get("/validation-results/{brochure_id}")
+# def get_brochure_results(brochure_id: str, current_user: dict = Depends(get_current_user)):
+#     """Fetch all validation statements for a specific brochure (owner only)"""
+#     try:
+#         user_id = current_user.get("user_id")
+#         result = validation_collection_v2.find_one(
+#             {"brochure_id": brochure_id, "user_id": user_id},
+#             {"_id": 0}
+#         )
+#         
+#         # If not found in v2, check v1
+#         if not result:
+#             result = validation_collection.find_one(
+#                 {"brochure_id": brochure_id, "user_id": user_id},
+#                 {"_id": 0}
+#             )
+#             
+#         if not result:
+#             raise HTTPException(status_code=404, detail="Validation results not found")
+#             
+#         return result
+#     except HTTPException:
+#         raise
+#     except Exception as e:
+#         logger.error(f"Failed to fetch results: {str(e)}")
+#         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/job-status/{job_id}")
-def get_job_status(job_id: str, current_user: dict = Depends(get_current_user)):
-    """Check the status of a background validation job"""
-    try:
-        user_id = current_user.get("user_id")
-        job = validation_collection_v2.find_one(
-            {"brochure_id": job_id, "user_id": user_id},
-            {"_id": 0, "results": 0} # Don't return results in status check
-        )
-        
-        if not job:
-            raise HTTPException(status_code=404, detail="Job not found")
-            
-        return {
-            "status": "success",
-            "job_id": job_id,
-            "state": job.get("status", "unknown"),
-            "filename": job.get("filename"),
-            "created_at": job.get("created_at"),
-            "message": "Job is " + job.get("status", "unknown")
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Status check failed for {job_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+# @app.get("/job-status/{job_id}")
+# def get_job_status(job_id: str, current_user: dict = Depends(get_current_user)):
+#     """Check the status of a background validation job"""
+#     try:
+#         user_id = current_user.get("user_id")
+#         job = validation_collection_v2.find_one(
+#             {"brochure_id": job_id, "user_id": user_id},
+#             {"_id": 0, "results": 0} # Don't return results in status check
+#         )
+#         
+#         if not job:
+#             raise HTTPException(status_code=404, detail="Job not found")
+#             
+#         return {
+#             "status": "success",
+#             "job_id": job_id,
+#             "state": job.get("status", "unknown"),
+#             "filename": job.get("filename"),
+#             "created_at": job.get("created_at"),
+#             "message": "Job is " + job.get("status", "unknown")
+#         }
+#     except HTTPException:
+#         raise
+#     except Exception as e:
+#         logger.error(f"Status check failed for {job_id}: {str(e)}")
+#         raise HTTPException(status_code=500, detail=str(e))
 
 
 
@@ -472,32 +477,35 @@ async def process_validation_job(
             avg_conf = sum(r.get('confidence_score', 0) for r in results_with_scoring) / len(results_with_scoring)
 
         # STEP 5: Update MongoDB with Results
-        validation_collection_v2.update_one(
-            {"brochure_id": job_id},
-            {
-                "$set": {
-                    "status": "completed",
-                    "total_statements": len(results),
-                    "avg_confidence": avg_conf,
-                    "results": results_with_scoring,
-                    "completed_at": datetime.utcnow()
-                }
-            }
-        )
+        # validation_collection_v2.update_one(
+        #     {"brochure_id": job_id},
+        #     {
+        #         "$set": {
+        #             "status": "completed",
+        #             "total_statements": len(results),
+        #             "avg_confidence": avg_conf,
+        #             "results": results_with_scoring,
+        #             "completed_at": datetime.utcnow()
+        #         }
+        #     }
+        # )
         logger.info(f"✅ [JOB COMPLETE] {job_id}")
+        # Save results to local JSON for bypass
+        with open(f"test_results/{job_id}_results.json", "w") as f:
+            json.dump({"job_id": job_id, "results": results_with_scoring}, f)
 
     except Exception as e:
         logger.error(f"❌ [JOB FAILED] {job_id}: {str(e)}")
-        validation_collection_v2.update_one(
-            {"brochure_id": job_id},
-            {
-                "$set": {
-                    "status": "failed",
-                    "error_message": str(e),
-                    "failed_at": datetime.utcnow()
-                }
-            }
-        )
+        # validation_collection_v2.update_one(
+        #     {"brochure_id": job_id},
+        #     {
+        #         "$set": {
+        #             "status": "failed",
+        #             "error_message": str(e),
+        #             "failed_at": datetime.utcnow()
+        #         }
+        #     }
+        # )
     finally:
         # Cleanup temporary files
         try:
@@ -546,23 +554,23 @@ async def run_pipeline(
             raise HTTPException(status_code=400, detail="All references must be PDF")
     
     # Create "Processing" record in MongoDB immediately
-    mongo_doc = {
-        "brochure_id": job_id,
-        "user_id": current_user.get("user_id"),
-        "user_email": current_user.get("email"),
-        "brochure_name": brochure_pdf.filename,
-        "filename": brochure_pdf.filename,
-        "pipeline_type": validation_type,
-        "status": "processing",
-        "created_at": datetime.utcnow(),
-        "schema_version": 2
-    }
-    try:
-        validation_collection_v2.insert_one(mongo_doc)
-        logger.info(f"✓ Initial job record created in MongoDB for {job_id}")
-    except Exception as e:
-        logger.error(f"Failed to create initial MongoDB record for {job_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to initialize job: {str(e)}")
+    # mongo_doc = {
+    #     "brochure_id": job_id,
+    #     "user_id": current_user.get("user_id"),
+    #     "user_email": current_user.get("email"),
+    #     "brochure_name": brochure_pdf.filename,
+    #     "filename": brochure_pdf.filename,
+    #     "pipeline_type": validation_type,
+    #     "status": "processing",
+    #     "created_at": datetime.utcnow(),
+    #     "schema_version": 2
+    # }
+    # try:
+    #     validation_collection_v2.insert_one(mongo_doc)
+    #     logger.info(f"✓ Initial job record created in MongoDB for {job_id}")
+    # except Exception as e:
+    #     logger.error(f"Failed to create initial MongoDB record for {job_id}: {str(e)}")
+    #     raise HTTPException(status_code=500, detail=f"Failed to initialize job: {str(e)}")
 
     # Prepare files in a temporary directory that stays until background task finishes
     job_tmp_dir = tempfile.mkdtemp()
@@ -599,20 +607,20 @@ async def run_pipeline(
     except HTTPException:
         # If setup fails, delete temp dir and mark job as failed
         shutil.rmtree(job_tmp_dir, ignore_errors=True)
-        validation_collection_v2.update_one(
-            {"brochure_id": job_id},
-            {"$set": {"status": "failed", "error_message": "HTTP Exception during setup", "failed_at": datetime.utcnow()}}
-        )
+        # validation_collection_v2.update_one(
+        #     {"brochure_id": job_id},
+        #     {"$set": {"status": "failed", "error_message": "HTTP Exception during setup", "failed_at": datetime.utcnow()}}
+        # )
         raise
     except Exception as e:
         # If setup fails, delete temp dir and mark job as failed
         error_trace = traceback.format_exc()
         logger.error(f"PIPELINE SETUP FAILED for {job_id}: {str(e)}\n{error_trace}")
         shutil.rmtree(job_tmp_dir, ignore_errors=True)
-        validation_collection_v2.update_one(
-            {"brochure_id": job_id},
-            {"$set": {"status": "failed", "error_message": str(e), "failed_at": datetime.utcnow()}}
-        )
+        # validation_collection_v2.update_one(
+        #     {"brochure_id": job_id},
+        #     {"$set": {"status": "failed", "error_message": str(e), "failed_at": datetime.utcnow()}}
+        # )
         raise HTTPException(status_code=500, detail=f"Failed to start validation job: {str(e)}")
 
 
@@ -620,199 +628,21 @@ async def run_pipeline(
 # AUTHENTICATION ENDPOINTS
 # ============================================================================
 
-@app.post("/signup", response_model=TokenResponse)
-async def signup(user: UserCreate, db=Depends(get_db)):
-    """Create a new user account"""
-    try:
-        if db is None:
-            raise HTTPException(status_code=500, detail="Database connection failed")
-            
-        # Check if user already exists
-        result = db.execute(
-            text("SELECT email FROM users WHERE email = :email"),
-            {"email": user.email}
-        ).fetchone()
-        
-        if result:
-            raise HTTPException(status_code=400, detail="Email already registered")
-        
-        # Create new user
-        new_id = str(uuid4())
-        hashed_pwd = hash_password(user.password)
-        
-        db.execute(
-            text("""
-                INSERT INTO users (id, email, password_hash, full_name, created_at, updated_at)
-                VALUES (:id, :email, :password_hash, :full_name, :created_at, :updated_at)
-            """),
-            {
-                "id": new_id,
-                "email": user.email,
-                "password_hash": hashed_pwd,
-                "full_name": user.full_name,
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow()
-            }
-        )
-        db.commit()
-        
-        # Create access token
-        access_token = create_access_token(data={"user_id": new_id, "email": user.email})
-        
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user": {
-                "id": new_id,
-                "email": user.email,
-                "full_name": user.full_name
-            }
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Signup failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Signup failed: {str(e)}")
-
-
-@app.post("/login", response_model=TokenResponse)
-async def login(credentials: UserLogin, db=Depends(get_db)):
-    """Authenticate user and return token"""
-    try:
-        if db is None:
-            raise HTTPException(status_code=500, detail="Database connection failed")
-            
-        # Find user
-        row = db.execute(
-            text("SELECT id, email, password_hash, full_name FROM users WHERE email = :email"),
-            {"email": credentials.email}
-        ).fetchone()
-        
-        if not row or not verify_password(credentials.password, row[2]):
-            raise HTTPException(status_code=401, detail="Incorrect email or password")
-        
-        # Update last login time or similar if needed...
-        
-        # Create token
-        access_token = create_access_token(data={"user_id": str(row[0]), "email": row[1]})
-        
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user": {
-                "id": str(row[0]),
-                "email": row[1],
-                "full_name": row[3]
-            }
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Login failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
-
-
-@app.get("/me", response_model=UserResponse)
-async def get_me(current_user: dict = Depends(get_current_user), db=Depends(get_db)):
-    """Get current logged in user profile"""
-    try:
-        user_id = current_user.get("user_id")
-        row = db.execute(
-            text("SELECT id, email, full_name, is_email_verified FROM users WHERE id = :id"),
-            {"id": user_id}
-        ).fetchone()
-        
-        if not row:
-            raise HTTPException(status_code=404, detail="User not found")
-            
-        return {
-            "id": str(row[0]),
-            "email": row[1],
-            "full_name": row[2],
-            "is_email_verified": row[3]
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Auth check failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Auth verification failed")
-
-# ============================================================================
-# OTP AUTHENTICATION (NEW)
-# ============================================================================
-from otp_service import generate_otp, store_otp, send_otp_email, check_resend_cooldown, verify_otp_hash
-from fastapi import Request
-
-@app.post("/auth/send-otp")
-async def send_otp(request: Request, payload: dict, db=Depends(get_db)):
-    """Step 8: Send OTP to email"""
-    email = payload.get("email")
-    if not email:
-        raise HTTPException(status_code=400, detail="Email is required")
-    
-    # Check if user exists
-    user = db.execute(text("SELECT id FROM users WHERE email = :email"), {"email": email}).fetchone()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # Check cooldown
-    if check_resend_cooldown(email):
-        raise HTTPException(status_code=429, detail="Please wait 60 seconds before resending")
-    
-    otp = generate_otp()
-    
-    # Store in Redis
-    store_otp(email, otp)
-    
-    # Send Email
-    success = send_otp_email(email, otp)
-    if not success:
-        raise HTTPException(status_code=500, detail="Failed to send email. Check SendGrid config.")
-    
-    # Audit Row
-    db.execute(text("""
-        INSERT INTO user_otp_audit (email, action, ip_address)
-        VALUES (:email, 'SENT', :ip)
-    """), {"email": email, "ip": request.client.host})
-    db.commit()
-    
-    return {"status": "success", "message": "OTP sent to your email"}
-
-@app.post("/auth/verify-otp")
-async def verify_otp(request: Request, payload: dict, db=Depends(get_db)):
-    """Step 9: Verify OTP and mark user as verified"""
-    email = payload.get("email")
-    otp = payload.get("otp")
-    
-    if not email or not otp:
-        raise HTTPException(status_code=400, detail="Email and OTP are required")
-    
-    verified, message = verify_otp_hash(email, otp)
-    
-    if not verified:
-        db.execute(text("""
-            INSERT INTO user_otp_audit (email, action, ip_address)
-            VALUES (:email, 'FAILED', :ip)
-        """), {"email": email, "ip": request.client.host})
-        db.commit()
-        raise HTTPException(status_code=400, detail=message)
-    
-    # Step 10: Mark user verified
-    db.execute(text("""
-        UPDATE users 
-        SET is_email_verified = TRUE, 
-            email_verified_at = :now
-        WHERE email = :email
-    """), {"email": email, "now": datetime.utcnow()})
-    
-    db.execute(text("""
-        INSERT INTO user_otp_audit (email, action, ip_address)
-        VALUES (:email, 'VERIFIED', :ip)
-    """), {"email": email, "ip": request.client.host})
-    
-    db.commit()
-    
-    return {"status": "success", "message": "Email verified successfully"}
+# @app.post("/signup", response_model=TokenResponse)
+# async def signup(user: UserCreate, db=Depends(get_db)):
+# ... (signing out)
+# @app.post("/login", response_model=TokenResponse)
+# async def login(credentials: UserLogin, db=Depends(get_db)):
+# ... (signing out)
+# @app.get("/me", response_model=UserResponse)
+# async def get_me(current_user: dict = Depends(get_current_user), db=Depends(get_db)):
+# ... (signing out)
+# @app.post("/auth/send-otp")
+# async def send_otp(request: Request, payload: dict, db=Depends(get_db)):
+# ... (signing out)
+# @app.post("/auth/verify-otp")
+# async def verify_otp(request: Request, payload: dict, db=Depends(get_db)):
+# ... (signing out)
 
 
 if __name__ == "__main__":
