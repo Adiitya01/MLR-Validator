@@ -42,7 +42,7 @@ export default function LoginForm({ onSuccess }) {
     setError('');
 
     try {
-      const apiBaseURL = import.meta.env.VITE_API_URL || 'https://mlr-backend-api.onrender.com';
+      const apiBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const response = await fetch(`${apiBaseURL}/login`, {
         method: 'POST',
         headers: {

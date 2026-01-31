@@ -24,7 +24,7 @@ export default function History({ onSelectBrochure }) {
       setLoading(true)
       setError(null)
       // Fetch all validation history with results from single endpoint
-      const apiBaseURL = import.meta.env.VITE_API_URL || 'https://mlr-backend-api.onrender.com';
+      const apiBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const token = localStorage.getItem('access_token');
 
       const response = await fetch(`${apiBaseURL}/validation-history`, {

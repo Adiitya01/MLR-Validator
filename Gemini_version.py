@@ -176,7 +176,21 @@ CRITICAL:
             pdf_file = genai.upload_file(tmp_path, mime_type="application/pdf")
             
             # Send validation request
-            client = genai.GenerativeModel("gemini-2.0-flash")
+            # Fallback model list for robustness
+            working_model = "gemini-1.5-flash-latest"
+            try:
+                client = genai.GenerativeModel("gemini-1.5-flash-latest")
+                # Test connectivity
+                client.generate_content("ping", generation_config={"max_output_tokens": 1})
+            except Exception:
+                try:
+                    client = genai.GenerativeModel("gemini-2.0-flash")
+                    client.generate_content("ping", generation_config={"max_output_tokens": 1})
+                    working_model = "gemini-2.0-flash"
+                except Exception:
+                    client = genai.GenerativeModel("gemini-1.5-pro")
+                    working_model = "gemini-1.5-pro"
+            
             response = client.generate_content([
                 validation_prompt,
                 pdf_file
@@ -251,7 +265,7 @@ class ValidationResult:
     
 class GeminiClient:
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-2.0-flash", base_url: str = "https://generativelanguage.googleapis.com"):
+    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-1.5-flash-latest", base_url: str = "https://generativelanguage.googleapis.com"):
 
         self.model = model
         self.base_url = base_url.rstrip('/')
@@ -284,12 +298,10 @@ class GeminiClient:
             logger.error("No Gemini API keys found in arguments or environment")
             return
 
-        # Try keys until one works
+            # Try keys until one works
         for key in unique_keys:
             # List of models to try in order of preference
-            models_to_try = [self.model, "gemini-1.5-pro", "gemini-1.5-flash"]
-            if self.model == "gemini-2.0-flash":
-                models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash"]
+            models_to_try = [self.model, "gemini-1.5-flash-latest", "gemini-1.5-pro", "gemini-2.0-flash"]
             
             # Remove duplicates while preserving order
             models_to_try = [m for i, m in enumerate(models_to_try) if m not in models_to_try[:i]]

@@ -38,6 +38,12 @@ function App() {
         const userDataStr = localStorage.getItem('user_data');
         if (userDataStr) {
           setUserData(JSON.parse(userDataStr));
+        } else {
+          // BYPASS: Set dummy user if not logged in for deployment
+          const dummyUser = { full_name: 'POC User', email: 'poc@example.com', is_email_verified: true };
+          setUserData(dummyUser);
+          localStorage.setItem('user_data', JSON.stringify(dummyUser));
+          localStorage.setItem('access_token', 'dummy_token');
         }
       } catch (err) {
         console.error('Error loading user data:', err);

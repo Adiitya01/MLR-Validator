@@ -35,7 +35,7 @@ export default function VerifyOTP() {
         setResending(true);
         setError('');
         try {
-            const apiBaseURL = import.meta.env.VITE_API_URL || 'https://mlr-backend-api.onrender.com';
+            const apiBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
             const response = await fetch(`${apiBaseURL}/auth/send-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -67,7 +67,7 @@ export default function VerifyOTP() {
         setMessage('');
 
         try {
-            const apiBaseURL = import.meta.env.VITE_API_URL || 'https://mlr-backend-api.onrender.com';
+            const apiBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
             const response = await fetch(`${apiBaseURL}/auth/verify-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

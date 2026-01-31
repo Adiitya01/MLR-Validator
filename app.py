@@ -14,9 +14,11 @@ from queue import Queue
 from threading import Lock
 from uuid import uuid4
 from sqlalchemy import text
+from dataclasses import asdict
+from datetime import datetime
 # from db import SessionLocal
 # from mongo_db import validation_collection, retry_db, validation_collection_v2
-# from mongo_schema import StorageOptimizer, ConfidenceScoringOptimizer
+from mongo_schema import StorageOptimizer, ConfidenceScoringOptimizer
 
 # Auth imports
 # from database import SessionLocal as AuthSessionLocal, get_db
@@ -60,6 +62,10 @@ class QueueHandler(logging.Handler):
 recent_logs = []
 logs_lock = Lock()
 
+# In-memory job status tracker (since DB is bypassed)
+jobs_status = {}
+status_lock = Lock()
+
 # Configure the root logger
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.DEBUG)
@@ -90,6 +96,7 @@ root_logger.addHandler(queue_handler)
 logging.getLogger('pymongo').setLevel(logging.WARNING)
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 logging.getLogger('google').setLevel(logging.WARNING)
+logging.getLogger("python_multipart").setLevel(logging.WARNING) # Silence multipart noise
 logger = logging.getLogger(__name__)
 
 # Load environment variables
@@ -136,7 +143,7 @@ def root():
     return {
         "status": "ok",
         "service": "MLR Validator Backend",
-        "message": "Backend is running successfully 🚀"
+        "message": "Backend is running successfully"
     }
 
 
@@ -154,7 +161,7 @@ def mongodb_status():
         
         return {
             "status": "connected",
-            "message": "✓ MongoDB connection is healthy",
+            "message": "[OK] MongoDB connection is healthy",
             "collections": {
                 "validation_results": v1_count,
                 "validation_results_v2": v2_count
@@ -164,7 +171,7 @@ def mongodb_status():
         logger.error(f"MongoDB status check failed: {str(e)}")
         return {
             "status": "error",
-            "message": f"✗ MongoDB connection failed: {str(e)}"
+            "message": f"[ERROR] MongoDB connection failed: {str(e)}"
         }
 
 
@@ -206,7 +213,7 @@ def mongodb_status():
 #         """))
 #         
 #         db.commit()
-#         return {"status": "success", "message": "✓ User database tables initialized and updated"}
+#         return {"status": "success", "message": "[OK] User database tables initialized and updated"}
 #     except Exception as e:
 #         logger.error(f"Database initialization failed: {str(e)}")
 #         raise HTTPException(status_code=500, detail=str(e))
@@ -257,60 +264,63 @@ async def get_latest_logs():
 #         return {"status": "error", "message": str(e), "history": []}
 
 
-# @app.get("/validation-results/{brochure_id}")
-# def get_brochure_results(brochure_id: str, current_user: dict = Depends(get_current_user)):
-#     """Fetch all validation statements for a specific brochure (owner only)"""
-#     try:
-#         user_id = current_user.get("user_id")
-#         result = validation_collection_v2.find_one(
-#             {"brochure_id": brochure_id, "user_id": user_id},
-#             {"_id": 0}
-#         )
-#         
-#         # If not found in v2, check v1
-#         if not result:
-#             result = validation_collection.find_one(
-#                 {"brochure_id": brochure_id, "user_id": user_id},
-#                 {"_id": 0}
-#             )
-#             
-#         if not result:
-#             raise HTTPException(status_code=404, detail="Validation results not found")
-#             
-#         return result
-#     except HTTPException:
-#         raise
-#     except Exception as e:
-#         logger.error(f"Failed to fetch results: {str(e)}")
-#         raise HTTPException(status_code=500, detail=str(e))
+@app.get("/validation-results/{brochure_id}")
+def get_brochure_results(brochure_id: str, current_user: dict = Depends(get_current_user)):
+    """Fetch results from local JSON file (bypass mode)"""
+    try:
+        file_path = f"test_results/{brochure_id}_results.json"
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="Validation results not found")
+            
+        with open(file_path, "r") as f:
+            return json.load(f)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to fetch results: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-# @app.get("/job-status/{job_id}")
-# def get_job_status(job_id: str, current_user: dict = Depends(get_current_user)):
-#     """Check the status of a background validation job"""
-#     try:
-#         user_id = current_user.get("user_id")
-#         job = validation_collection_v2.find_one(
-#             {"brochure_id": job_id, "user_id": user_id},
-#             {"_id": 0, "results": 0} # Don't return results in status check
-#         )
-#         
-#         if not job:
-#             raise HTTPException(status_code=404, detail="Job not found")
-#             
-#         return {
-#             "status": "success",
-#             "job_id": job_id,
-#             "state": job.get("status", "unknown"),
-#             "filename": job.get("filename"),
-#             "created_at": job.get("created_at"),
-#             "message": "Job is " + job.get("status", "unknown")
-#         }
-#     except HTTPException:
-#         raise
-#     except Exception as e:
-#         logger.error(f"Status check failed for {job_id}: {str(e)}")
-#         raise HTTPException(status_code=500, detail=str(e))
+@app.get("/job-status/{job_id}")
+def get_job_status(job_id: str, current_user: dict = Depends(get_current_user)):
+    """Check the status of a background validation job"""
+    try:
+        # Check in-memory status tracker first
+        with status_lock:
+            if job_id in jobs_status:
+                job = jobs_status[job_id]
+                return {
+                    "status": "success",
+                    "job_id": job_id,
+                    "state": job.get("status", "unknown"),
+                    "filename": job.get("filename"),
+                    "created_at": job.get("created_at"),
+                    "message": "Job is " + job.get("status", "unknown")
+                }
+        
+        # Original logic commented out
+        # user_id = current_user.get("user_id")
+        # job = validation_collection_v2.find_one(
+        #     {"brochure_id": job_id, "user_id": user_id},
+        #     {"_id": 0, "results": 0} # Don't return results in status check
+        # )
+        
+        # if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+            
+        # return {
+        #     "status": "success",
+        #     "job_id": job_id,
+        #     "state": job.get("status", "unknown"),
+        #     "filename": job.get("filename"),
+        #     "created_at": job.get("created_at"),
+        #     "message": "Job is " + job.get("status", "unknown")
+        # }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Status check failed for {job_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 
@@ -438,9 +448,20 @@ async def process_validation_job(
     user_email: str,
     tmpdir: str
 ):
-    """Heavy lifting background task for validation"""
+    async def _cleanup():
+        try:
+            shutil.rmtree(tmpdir)
+            logger.info(f"[CLEANUP] Deleted temp dir for {job_id}")
+        except Exception:
+            logger.warning(f"[CLEANUP FAILED] Could not delete temp dir {tmpdir} for {job_id}")
+
+    # Explicit phase management
+    status = "UNKNOWN"
     try:
-        logger.info(f"🚀 [BACKGROUND JOB] Starting {job_id} ({validation_type})")
+        logger.info(f"[JOB START] Starting {job_id} ({validation_type})")
+        with status_lock:
+            if job_id in jobs_status:
+                jobs_status[job_id]["status"] = "processing"
         
         # STEP 2: Extract
         if validation_type == "drug":
@@ -452,12 +473,8 @@ async def process_validation_job(
             raise RuntimeError("Extraction failed or produced no results")
 
         # STEP 3: Convert
-        # This part needs to handle both research and drug types correctly
         if validation_type == "drug":
-            validation_rows = build_validation_rows_special_case(
-                extraction_result,
-                {}  # No references mapping for drug tables
-            )
+            validation_rows = build_validation_rows_special_case(extraction_result, {})
             import pandas as pd
             validation_df = pd.DataFrame(validation_rows)
             validation_df['pdf_files_dict'] = [pdf_files_dict] * len(validation_df)
@@ -472,47 +489,30 @@ async def process_validation_job(
         results_optimized = [StorageOptimizer.compress_result(r.copy()) for r in results_dicts]
         results_with_scoring = ConfidenceScoringOptimizer.normalize_confidence_scores(results_optimized)
         
-        avg_conf = 0
-        if results_with_scoring:
-            avg_conf = sum(r.get('confidence_score', 0) for r in results_with_scoring) / len(results_with_scoring)
-
-        # STEP 5: Update MongoDB with Results
-        # validation_collection_v2.update_one(
-        #     {"brochure_id": job_id},
-        #     {
-        #         "$set": {
-        #             "status": "completed",
-        #             "total_statements": len(results),
-        #             "avg_confidence": avg_conf,
-        #             "results": results_with_scoring,
-        #             "completed_at": datetime.utcnow()
-        #         }
-        #     }
-        # )
-        logger.info(f"✅ [JOB COMPLETE] {job_id}")
         # Save results to local JSON for bypass
+        result_payload = {
+            "job_id": job_id,
+            "brochure_id": job_id,
+            "brochure_name": brochure_filename,
+            "status": "completed",
+            "results": results_with_scoring,
+            "created_at": datetime.utcnow().isoformat()
+        }
         with open(f"test_results/{job_id}_results.json", "w") as f:
-            json.dump({"job_id": job_id, "results": results_with_scoring}, f)
+            json.dump(result_payload, f)
+            
+        logger.info(f"[JOB SUCCESS] {job_id}")
+        status = "completed"
 
-    except Exception as e:
-        logger.error(f"❌ [JOB FAILED] {job_id}: {str(e)}")
-        # validation_collection_v2.update_one(
-        #     {"brochure_id": job_id},
-        #     {
-        #         "$set": {
-        #             "status": "failed",
-        #             "error_message": str(e),
-        #             "failed_at": datetime.utcnow()
-        #         }
-        #     }
-        # )
+    except Exception:
+        logger.exception(f"[JOB FAILED] {job_id}")
+        status = "failed"
     finally:
-        # Cleanup temporary files
-        try:
-            shutil.rmtree(tmpdir)
-            logger.info(f"🧹 [CLEANUP] Deleted temp dir for {job_id}")
-        except Exception as e:
-            logger.warning(f"⚠️ [CLEANUP FAILED] Could not delete temp dir {tmpdir} for {job_id}: {e}")
+        with status_lock:
+            if job_id in jobs_status:
+                jobs_status[job_id]["status"] = status
+        await _cleanup()
+        logger.info(f"[JOB FINALIZED] {job_id} ({status})")
 
 @app.post("/run-pipeline")
 async def run_pipeline(
@@ -567,10 +567,18 @@ async def run_pipeline(
     # }
     # try:
     #     validation_collection_v2.insert_one(mongo_doc)
-    #     logger.info(f"✓ Initial job record created in MongoDB for {job_id}")
+    #     logger.info(f"[OK] Initial job record created in MongoDB for {job_id}")
     # except Exception as e:
     #     logger.error(f"Failed to create initial MongoDB record for {job_id}: {str(e)}")
     #     raise HTTPException(status_code=500, detail=f"Failed to initialize job: {str(e)}")
+
+    # Add to in-memory status tracker
+    with status_lock:
+        jobs_status[job_id] = {
+            "status": "queued",
+            "filename": brochure_pdf.filename,
+            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        }
 
     # Prepare files in a temporary directory that stays until background task finishes
     job_tmp_dir = tempfile.mkdtemp()
@@ -597,7 +605,7 @@ async def run_pipeline(
             tmpdir=job_tmp_dir
         )
         
-        logger.info(f"✓ Background task for {job_id} added successfully.")
+        logger.info(f"[OK] Background task for {job_id} added successfully.")
         return {
             "status": "success",
             "message": "Validation job started in background",

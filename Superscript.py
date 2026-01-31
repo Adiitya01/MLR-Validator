@@ -69,7 +69,7 @@ For each table in the PDF, do the following:
 - If no superscripts or marks are found, return an empty array [].
 - Do not include markdown or explanations, only the JSON array.
 '''
-    models_to_try = ["gemini-2.5-flash", "gemini-2.5-pro"]
+    models_to_try = ["gemini-1.5-flash-latest", "gemini-2.0-flash", "gemini-1.5-pro"]
     response = None
     last_error = None
 
@@ -258,7 +258,7 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
     - If the page has no citations and no tables, return an empty array [].
     '''
 
-    models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash"]
+    models_to_try = ["gemini-1.5-flash-latest", "gemini-2.0-flash", "gemini-1.5-pro"]
     response = None
     last_error = None
 
@@ -398,11 +398,11 @@ def main():
         output_filename = os.path.basename(pdf_path).replace(".pdf", "_extracted.json")
         save_json(data=result, folder=output_folder, filename=output_filename)
         
-        print(f"✅ Extraction complete. Saved to {output_folder}/{output_filename}")
+        print(f"[OK] Extraction complete. Saved to {output_folder}/{output_filename}")
         print(json.dumps(result, indent=2)[:500] + "...")
         
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"[ERROR] Error: {e}")
 
 if __name__ == "__main__":
     main()

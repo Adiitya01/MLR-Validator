@@ -110,16 +110,16 @@ async def extract_drug_pdf(file: UploadFile = File(...)):
                 message="No drug table records extracted from PDF"
             )
         
-        logger.info(f"[DRUG EXTRACT] ✅ Extracted {len(records)} drug records")
+        logger.info(f"[DRUG EXTRACT] [OK] Extracted {len(records)} drug records")
         return DrugExtractResponse(
             success=True,
             total_records=len(records),
             records=records,
-            message=f"✅ Successfully extracted {len(records)} drug records"
+            message=f"[OK] Successfully extracted {len(records)} drug records"
         )
         
     except Exception as e:
-        logger.error(f"[DRUG EXTRACT] ❌ Error: {str(e)}")
+        logger.error(f"[DRUG EXTRACT] [ERROR] Error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Drug extraction failed: {str(e)}")
     
     finally:
@@ -156,16 +156,16 @@ async def convert_drug_records(request: DrugConvertRequest):
                 message="No rows generated after conversion"
             )
         
-        logger.info(f"[DRUG CONVERT] ✅ Generated {len(validation_rows)} validation rows")
+        logger.info(f"[DRUG CONVERT] [OK] Generated {len(validation_rows)} validation rows")
         return DrugConvertResponse(
             success=True,
             total_rows=len(validation_rows),
             validation_rows=validation_rows,
-            message=f"✅ Successfully converted {len(validation_rows)} rows"
+            message=f"[OK] Successfully converted {len(validation_rows)} rows"
         )
         
     except Exception as e:
-        logger.error(f"[DRUG CONVERT] ❌ Error: {str(e)}")
+        logger.error(f"[DRUG CONVERT] [ERROR] Error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Drug conversion failed: {str(e)}")
 
 
@@ -199,16 +199,16 @@ async def convert_drug_records_image1(request: DrugConvertRequest):
                 message="No rows generated after IMAGE 1 conversion"
             )
         
-        logger.info(f"[DRUG CONVERT IMAGE1] ✅ Generated {len(validation_rows)} validation rows")
+        logger.info(f"[DRUG CONVERT IMAGE1] [OK] Generated {len(validation_rows)} validation rows")
         return DrugConvertResponse(
             success=True,
             total_rows=len(validation_rows),
             validation_rows=validation_rows,
-            message=f"✅ Successfully converted {len(validation_rows)} IMAGE 1 rows"
+            message=f"[OK] Successfully converted {len(validation_rows)} IMAGE 1 rows"
         )
         
     except Exception as e:
-        logger.error(f"[DRUG CONVERT IMAGE1] ❌ Error: {str(e)}")
+        logger.error(f"[DRUG CONVERT IMAGE1] [ERROR] Error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"IMAGE 1 conversion failed: {str(e)}")
 
 
@@ -242,16 +242,16 @@ async def convert_drug_records_image2(request: DrugConvertRequest):
                 message="No rows generated after IMAGE 2 conversion"
             )
         
-        logger.info(f"[DRUG CONVERT IMAGE2] ✅ Generated {len(validation_rows)} validation rows")
+        logger.info(f"[DRUG CONVERT IMAGE2] [OK] Generated {len(validation_rows)} validation rows")
         return DrugConvertResponse(
             success=True,
             total_rows=len(validation_rows),
             validation_rows=validation_rows,
-            message=f"✅ Successfully converted {len(validation_rows)} IMAGE 2 rows"
+            message=f"[OK] Successfully converted {len(validation_rows)} IMAGE 2 rows"
         )
         
     except Exception as e:
-        logger.error(f"[DRUG CONVERT IMAGE2] ❌ Error: {str(e)}")
+        logger.error(f"[DRUG CONVERT IMAGE2] [ERROR] Error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"IMAGE 2 conversion failed: {str(e)}")
 
 
@@ -329,7 +329,7 @@ async def validate_drug_statement(
             "errors": sum(1 for r in results if r.validation_result == "Error")
         }
         
-        logger.info(f"[DRUG VALIDATE] ✅ Results: {summary['supported']} supported, {summary['contradicted']} contradicted")
+        logger.info(f"[DRUG VALIDATE] [OK] Results: {summary['supported']} supported, {summary['contradicted']} contradicted")
         
         return DrugValidateResponse(
             success=True,
@@ -337,11 +337,11 @@ async def validate_drug_statement(
             total_results=len(results),
             results=results,
             summary=summary,
-            message=f"✅ Validated against {len(files)} PDFs"
+            message=f"[OK] Validated against {len(files)} PDFs"
         )
         
     except Exception as e:
-        logger.error(f"[DRUG VALIDATE] ❌ Error: {str(e)}")
+        logger.error(f"[DRUG VALIDATE] [ERROR] Error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Drug validation failed: {str(e)}")
     
     finally:
@@ -381,7 +381,7 @@ async def drug_pipeline(
         if not extracted_records:
             raise ValueError("No drug table records extracted from PDF")
         
-        logger.info(f"[DRUG PIPELINE] ✅ Extracted {len(extracted_records)} records")
+        logger.info(f"[DRUG PIPELINE] [OK] Extracted {len(extracted_records)} records")
         
         # Step 2: Convert
         logger.info("[DRUG PIPELINE] Step 2: Converting...")
@@ -390,7 +390,7 @@ async def drug_pipeline(
         if not validation_rows:
             raise ValueError("No validation rows generated")
         
-        logger.info(f"[DRUG PIPELINE] ✅ Generated {len(validation_rows)} validation rows")
+        logger.info(f"[DRUG PIPELINE] [OK] Generated {len(validation_rows)} validation rows")
         
         # Step 3: Validate
         logger.info("[DRUG PIPELINE] Step 3: Validating...")
@@ -421,7 +421,7 @@ async def drug_pipeline(
             )
             all_validation_results.extend(results)
         
-        logger.info(f"[DRUG PIPELINE] ✅ Validated {len(all_validation_results)} results")
+        logger.info(f"[DRUG PIPELINE] [OK] Validated {len(all_validation_results)} results")
         
         return JSONResponse({
             "success": True,
@@ -439,11 +439,11 @@ async def drug_pipeline(
                 "total_results": len(all_validation_results),
                 "results": [asdict(r) if hasattr(r, '__dataclass_fields__') else r.__dict__ for r in all_validation_results]
             },
-            "message": "✅ Drug pipeline completed successfully"
+            "message": "[OK] Drug pipeline completed successfully"
         })
         
     except Exception as e:
-        logger.error(f"[DRUG PIPELINE] ❌ Failed: {str(e)}")
+        logger.error(f"[DRUG PIPELINE] [ERROR] Failed: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Drug pipeline failed: {str(e)}")
     
     finally:
@@ -485,7 +485,7 @@ async def extract_research_pdf(file: UploadFile = File(...)):
                 "message": "No citations extracted from PDF"
             })
         
-        logger.info(f"[RESEARCH EXTRACT] ✅ Extracted {len(extraction_result.in_text)} citations")
+        logger.info(f"[RESEARCH EXTRACT] [OK] Extracted {len(extraction_result.in_text)} citations")
         
         return JSONResponse({
             "success": True,
@@ -500,11 +500,11 @@ async def extract_research_pdf(file: UploadFile = File(...)):
                 for c in extraction_result.in_text
             ],
             "references": extraction_result.references,
-            "message": f"✅ Successfully extracted {len(extraction_result.in_text)} citations"
+            "message": f"[OK] Successfully extracted {len(extraction_result.in_text)} citations"
         })
         
     except Exception as e:
-        logger.error(f"[RESEARCH EXTRACT] ❌ Error: {str(e)}")
+        logger.error(f"[RESEARCH EXTRACT] [ERROR] Error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Research extraction failed: {str(e)}")
     
     finally:
@@ -585,7 +585,7 @@ async def validate_research_statement(
             "errors": sum(1 for r in results if r.validation_result == "Error")
         }
         
-        logger.info(f"[RESEARCH VALIDATE] ✅ Results: {summary}")
+        logger.info(f"[RESEARCH VALIDATE] [OK] Results: {summary}")
         
         return JSONResponse({
             "success": True,
@@ -603,11 +603,11 @@ async def validate_research_statement(
                 for r in results
             ],
             "summary": summary,
-            "message": f"✅ Validated against {len(files)} research papers"
+            "message": f"[OK] Validated against {len(files)} research papers"
         })
         
     except Exception as e:
-        logger.error(f"[RESEARCH VALIDATE] ❌ Error: {str(e)}")
+        logger.error(f"[RESEARCH VALIDATE] [ERROR] Error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Research validation failed: {str(e)}")
     
     finally:
@@ -624,7 +624,7 @@ async def validate_research_statement(
 async def drug_health():
     """Drug pipeline health check"""
     return {
-        "status": "🟢 Drug Pipeline is running",
+        "status": "Drug Pipeline is running",
         "pipeline_type": "DRUG",
         "endpoints": {
             "extract": "POST /api/drugs/extract",
@@ -639,7 +639,7 @@ async def drug_health():
 async def research_health():
     """Research pipeline health check"""
     return {
-        "status": "🟢 Research Pipeline is running",
+        "status": "Research Pipeline is running",
         "pipeline_type": "RESEARCH",
         "endpoints": {
             "extract": "POST /api/research/extract",

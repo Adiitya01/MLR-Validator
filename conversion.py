@@ -251,7 +251,7 @@ def print_validation_results(validation_rows):
     Print validation rows to console in a readable format.
     """
     if not validation_rows:
-        print("\n⚠️  No validation rows to display.\n")
+        print("\n[WARNING] No validation rows to display.\n")
         return
     
     print("\n" + "="*80)
@@ -261,7 +261,7 @@ def print_validation_results(validation_rows):
     print(f"Total rows processed: {len(validation_rows)}\n")
     
     for idx, row in enumerate(validation_rows, 1):
-        print(f"📋 Row #{idx}")
+        print(f"[ROW] Row #{idx}")
         print("-" * 80)
         print(f"   Statement:      {row.get('statement', '')}")
         print(f"   Reference No:   {row.get('reference_no', '')}")
@@ -283,7 +283,7 @@ def convert_to_excel(json_file, output_excel=None, title=""):
         Path to created Excel file
     """
     
-    print(f"📖 Reading: {json_file}")
+    print(f"[READING] Reading: {json_file}")
     
     # Read JSON
     with open(json_file, 'r', encoding='utf-8') as f:
@@ -293,11 +293,11 @@ def convert_to_excel(json_file, output_excel=None, title=""):
     in_text = data.get('in_text', [])
     references = data.get('references', {})
     
-    print(f"✅ Found {len(in_text)} citations")
-    print(f"✅ Found {len(references)} references\n")
+    print(f"[OK] Found {len(in_text)} citations")
+    print(f"[OK] Found {len(references)} references\n")
     
     # Build DataFrame
-    print("🔨 Processing citations...\n")
+    print("[PROCESSING] Processing citations...\n")
     df = build_validation_dataframe(in_text, references, title=title)
     
     # Display all converted output on console BEFORE saving
@@ -315,18 +315,18 @@ def convert_to_excel(json_file, output_excel=None, title=""):
     user_input = input("\nDoes the output look correct? (yes/no): ").strip().lower()
     
     if user_input not in ['yes', 'y']:
-        print("\n❌ Operation cancelled. Excel file not saved.\n")
+        print("\n[CANCELLED] Operation cancelled. Excel file not saved.\n")
         return None
     
     # Save to Excel
-    print(f"\n💾 Saving to Excel: {output_excel}\n")
+    print(f"\n[SAVING] Saving to Excel: {output_excel}\n")
     
     df.to_excel(output_excel, index=False, sheet_name='Statements')
     
-    print(f"✅ Successfully created validation file!")
-    print(f"   📊 Rows: {len(df)}")
-    print(f"   📋 Columns: {', '.join(df.columns)}")
-    print(f"   📁 File: {output_excel}\n")
+    print(f"[OK] Successfully created validation file!")
+    print(f"   [STATS] Rows: {len(df)}")
+    print(f"   [COLS] Columns: {', '.join(df.columns)}")
+    print(f"   [FILE] File: {output_excel}\n")
     
     return output_excel
 
@@ -336,7 +336,7 @@ def print_dataframe_to_console(df):
     Print the entire DataFrame to console in a readable format before saving.
     """
     if df.empty:
-        print("\n⚠️  No data to display.\n")
+        print("\n[WARNING] No data to display.\n")
         return
     
     print("\n" + "="*100)
@@ -346,12 +346,12 @@ def print_dataframe_to_console(df):
     
     # Print each row in a formatted way
     for idx, (_, row) in enumerate(df.iterrows(), 1):
-        print(f"📋 Record #{idx}")
+        print(f"[RECORD] Record #{idx}")
         print("-" * 100)
         
         # Statement
         stmt = str(row.get('statement', ''))
-        print(f"   📝 Statement:")
+        print(f"   [STATEMENT] Statement:")
         if len(stmt) > 95:
             # Wrap long statements
             wrapped = [stmt[i:i+95] for i in range(0, len(stmt), 95)]
@@ -363,11 +363,11 @@ def print_dataframe_to_console(df):
         
         # Reference No
         ref_no = str(row.get('reference_no', ''))
-        print(f"   📌 Reference No: {ref_no}")
+        print(f"   [REF NO] Reference No: {ref_no}")
         
         # Reference Text
         ref_text = str(row.get('reference', ''))
-        print(f"   📖 Reference:")
+        print(f"   [REFERENCE] Reference:")
         if len(ref_text) > 0:
             if len(ref_text) > 95:
                 wrapped = [ref_text[i:i+95] for i in range(0, len(ref_text), 95)]
@@ -381,7 +381,7 @@ def print_dataframe_to_console(df):
         
         # Page No
         page_no = row.get('page_no', '')
-        print(f"   📄 Page No: {page_no}")
+        print(f"   [PAGE] Page No: {page_no}")
         print()
     
     print("="*100 + "\n")
@@ -409,27 +409,27 @@ def convert_superscript_output_to_validation(pdf_path):
     print("="*80 + "\n")
     
     # Step 1: Run Superscript extraction at runtime
-    print(f"📄 Extracting from PDF: {pdf_path}\n")
+    print(f"[EXTRACTING] Extracting from PDF: {pdf_path}\n")
     try:
         data_rows = extract_drug_superscript_table_data(pdf_path)
     except Exception as e:
-        print(f"❌ Error during extraction: {str(e)}\n")
+        print(f"[ERROR] Error during extraction: {str(e)}\n")
         return None
     
-    print(f"✅ Extracted {len(data_rows)} records\n")
+    print(f"[OK] Extracted {len(data_rows)} records\n")
     
     # For now, references will be empty (they come from text extraction in Superscript)
     references = {}
     
     # Step 2: Process through special case converter
-    print("🔨 Processing records through validation converter...\n")
+    print("[PROCESSING] Processing records through validation converter...\n")
     result = build_validation_rows_special_case(data_rows, references)
     
     if not result:
-        print("⚠️  No results generated.\n")
+        print("[WARNING] No results generated.\n")
         return None
     
-    print(f"✅ Generated {len(result)} validation rows\n")
+    print(f"[OK] Generated {len(result)} validation rows\n")
     
     # Step 3: Display polished results
     print_validation_results(result)
@@ -469,7 +469,7 @@ Output:
     
     # Verify PDF exists
     if not Path(pdf_path).exists():
-        print(f"❌ Error: PDF file not found - {pdf_path}\n")
+        print(f"[ERROR] Error: PDF file not found - {pdf_path}\n")
         sys.exit(1)
     
     # Run pipeline (extract + convert + display)
@@ -491,16 +491,15 @@ Output:
     # Create folder if needed
     Path(output_folder).mkdir(exist_ok=True)
     
-    # Convert to DataFrame and save
     df = pd.DataFrame(validation_rows)
     df.to_excel(output_excel, index=False, sheet_name='Statements')
     
-    print(f"✅ Successfully created validation file!")
-    print(f"   📊 Rows: {len(df)}")
-    print(f"   📋 Columns: {', '.join(df.columns)}")
-    print(f"   📁 File: {output_excel}\n")
+    print(f"[OK] Successfully created validation file!")
+    print(f"   [STATS] Rows: {len(df)}")
+    print(f"   [COLS] Columns: {', '.join(df.columns)}")
+    print(f"   [FILE] File: {output_excel}\n")
     
-    print("✅ Pipeline complete!\n")
+    print("[OK] Pipeline complete!\n")
     print("📌 Next steps:")
     print(f"   1. Upload '{output_excel}' to Validation.py")
     print("   2. Upload reference PDFs in Validation.py")
