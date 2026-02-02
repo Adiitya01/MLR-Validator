@@ -472,6 +472,23 @@ async def process_validation_job(
         if not extraction_result:
             raise RuntimeError("Extraction failed or produced no results")
 
+        # SAVE STEP 2: Superscript Output
+        os.makedirs("output", exist_ok=True)
+        try:
+            # Handle DocumentExtraction object or list
+            if hasattr(extraction_result, "model_dump"):
+                raw_data = extraction_result.model_dump()
+            elif hasattr(extraction_result, "__dict__"):
+                raw_data = extraction_result.__dict__
+            else:
+                raw_data = extraction_result
+            
+            with open("output/superscript_output.json", "w", encoding="utf-8") as f:
+                json.dump(raw_data, f, indent=2, ensure_ascii=False)
+            logger.info("[DEBUG] Saved output/superscript_output.json")
+        except Exception as e:
+            logger.warning(f"Failed to save superscript_output: {e}")
+
         # STEP 3: Convert
         if validation_type == "drug":
             validation_rows = build_validation_rows_special_case(extraction_result, {})
@@ -481,6 +498,16 @@ async def process_validation_job(
         else:
             validation_df = convert_to_dataframe(extraction_result, pdf_files_dict)
         
+        # SAVE STEP 3: Conversion Output
+        try:
+            # Convert DF to list of dicts for JSON saving
+            conv_data = validation_df.drop(columns=['pdf_files_dict'], errors='ignore').to_dict(orient='records')
+            with open("output/conversion_output.json", "w", encoding="utf-8") as f:
+                json.dump(conv_data, f, indent=2, ensure_ascii=False)
+            logger.info("[DEBUG] Saved output/conversion_output.json")
+        except Exception as e:
+            logger.warning(f"Failed to save conversion_output: {e}")
+        
         # STEP 4: Validate
         results = validate_statements(validation_df)
         results_dicts = [asdict(r) for r in results]
@@ -488,6 +515,14 @@ async def process_validation_job(
         # Optimize & Score
         results_optimized = [StorageOptimizer.compress_result(r.copy()) for r in results_dicts]
         results_with_scoring = ConfidenceScoringOptimizer.normalize_confidence_scores(results_optimized)
+        
+        # SAVE STEP 4: Validation Output
+        try:
+            with open("output/validation_output.json", "w", encoding="utf-8") as f:
+                json.dump(results_with_scoring, f, indent=2, ensure_ascii=False)
+            logger.info("[DEBUG] Saved output/validation_output.json")
+        except Exception as e:
+            logger.warning(f"Failed to save validation_output: {e}")
         
         # Save results to local JSON for bypass
         result_payload = {

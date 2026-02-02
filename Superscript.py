@@ -232,36 +232,33 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
     ### STEP 2: EXTRACT ALL TABLE DATA
     For any comparison tables or data grids:
     
-    1. **SKIP HEADER ROWS** - Do NOT extract the first row if it only contains column labels
-       (e.g., "Category", "Large Volume Paracentesis", "Diuretics", "Indwelling Peritoneal Catheter")
+    1. **IDENTIFY HEADERS** - Note the labels for Rows (left column) and Columns (top row).
     
     2. **FOR EACH DATA CELL:**
-       - If the cell has a superscript: Set "superscript_number" to that number
-       - If the cell has NO superscript: Set "superscript_number" to "Table"
-       - Set "heading" to the Row Category (e.g., "Cost", "Invasiveness")
-       - Set "statement" using format: "Row: [Row Name] | Column: [Column Name] | Content: [Cell Text]"
+       - **Find the Citation**: Search for a superscript number in this order:
+         a) Inside the cell itself.
+         b) In the Row Header (the category on the left).
+         c) In the Column Header (the title at the top).
+       - **Assign Citation**: 
+         - If a number is found in any of those 3 places, set "superscript_number" to that number.
+         - ONLY if no number exists in the cell, row, or column, set "superscript_number" to "Table".
+       - **Set Details**:
+         - Set "heading" to the Row Category.
+         - Set "statement" using format: "Row: [Row Name] | Column: [Column Name] | Content: [Cell Text]"
 
-    *Example - Cell WITH superscript:*
+    *Example (Cell gets citation from Row Header):*
+    If Row Header is "Cost ⁵" and cell is "High", extraction is:
     {
         "page_number": 2,
         "superscript_number": "5",
-        "heading": "Procedure Setting",
-        "statement": "Row: Procedure Setting | Column: Large Volume Paracentesis | Content: Outpatient or hospital-based procedure"
-    }
-
-    *Example - Cell WITHOUT superscript:*
-    {
-        "page_number": 2,
-        "superscript_number": "Table",
         "heading": "Cost",
-        "statement": "Row: Cost | Column: Large Volume Paracentesis | Content: Procedure cost, Cost of multiple hospital admissions"
+        "statement": "Row: Cost | Column: Large Volume Paracentesis | Content: High"
     }
 
     ### GENERAL RULES:
-    - Extract EVERY statement with a superscript citation - do not skip any
-    - Extract EVERY table data cell - use "Table" if no superscript is present
+    - BE AGGRESSIVE: Do not use "Table" if a number exists in the row or column header.
+    - Extract EVERY statement with a superscript citation.
     - Return ONLY the JSON array. No markdown, no explanations.
-    - If the page has no citations and no tables, return an empty array [].
     '''
 
     models_to_try = ["gemini-1.5-flash-latest", "gemini-2.0-flash", "gemini-1.5-pro"]

@@ -1027,43 +1027,36 @@ class StatementValidator:
                 page_no = sample_row.get('page_no', None)
                 pdf_files_dict = sample_row.get('pdf_files_dict', {})
                 
-                # HANDLE "Table" REFERENCES GRACEFULLY
-                # These are table cells without superscript citations - mark as Uncited, not Error
+                # HANDLE "Table" OR MISSING REFERENCES - Dynamic Universal Validation
+                # If a statement came from a table without a superscript, we search ALL papers to find proof.
                 if combined_refs.lower() == "table" or combined_refs == "":
-                    logger.info(f"[{processed}] [UNCITED] Table data without superscript citation")
-                    uncited_res = ValidationResult(
-                        statement=statement,
-                        reference_no=sample_row.get('reference_no', 0),
-                        reference=sample_row.get('reference', ''),
-                        matched_paper="N/A",
-                        matched_evidence="This statement appears in a table without a superscript citation. It may be general knowledge or require no specific reference.",
-                        validation_result="Uncited",
-                        page_location="Table",
-                        confidence_score=0.5,
-                        matching_method="Table Data",
-                        analysis_summary="No superscript reference was found for this table cell. This is common for headers, categories, or well-known medical facts."
-                    )
-                    statement_cache[statement] = [uncited_res]
-                    continue
-                
-                # Filter PDFs for ALL reference numbers in this group
-                filtered_pdf_dict = self.filter_pdfs_by_references(pdf_files_dict, combined_refs)
+                    logger.info(f"[{processed}] [UNIVERSAL SEARCH] No specific citation found. Searching all papers for: {statement[:40]}...")
+                    filtered_pdf_dict = pdf_files_dict
+                    is_uncited_fallback = True
+                else:
+                    # Filter PDFs for ALL reference numbers in this group
+                    filtered_pdf_dict = self.filter_pdfs_by_references(pdf_files_dict, combined_refs)
+                    is_uncited_fallback = False
                 
                 if not filtered_pdf_dict:
                     logger.warning(f"[{processed}] [FAIL] No matching PDFs for references: {combined_refs}")
-                    # Don't delete the record! Add a placeholder result so the count stays at 44
-                    missing_res = ValidationResult(
+                    # If it was a 'Table' ref and no PDFs match, mark as Uncited
+                    # If it was a numbered ref and PDF is missing, mark as Reference Missing
+                    final_status = "Uncited" if is_uncited_fallback else "Reference Missing"
+                    
+                    err_res = ValidationResult(
                         statement=statement,
                         reference_no=sample_row.get('reference_no', 0),
                         reference=sample_row.get('reference', ''),
                         matched_paper="None",
-                        matched_evidence="No matching reference PDF was found for the extraction numbers provided.",
-                        validation_result="Reference Missing",
+                        matched_evidence=f"No matching reference PDF was found for the extraction: {combined_refs}",
+                        validation_result=final_status,
                         page_location="N/A",
                         confidence_score=0.0,
-                        analysis_summary=f"The extraction found reference numbers ({combined_refs}), but no uploaded PDF file names started with these numbers."
+                        matching_method="Reference Filter",
+                        analysis_summary=f"Validation skipped: {final_status}"
                     )
-                    statement_cache[statement] = [missing_res]
+                    statement_cache[statement] = [err_res]
                     continue
                 
                 # Validate this statement against its combined reference PDFs
