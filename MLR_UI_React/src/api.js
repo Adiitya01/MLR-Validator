@@ -2,7 +2,7 @@
 // Backend runs on http://localhost:8000
 
 class APIClient {
-  constructor(baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000',) {
+  constructor(baseUrl = import.meta.env.VITE_API_URL || 'https://mlr-validator.onrender.com',) {
     console.log('[DEBUG] APIClient initialized with baseUrl:', baseUrl);
     this.baseUrl = baseUrl;
     this.isConnected = false;

@@ -101,6 +101,8 @@ logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
+os.makedirs("test_results", exist_ok=True)
+os.makedirs("output", exist_ok=True)
 
 # Test logging to verify it's working
 logger = logging.getLogger(__name__)
