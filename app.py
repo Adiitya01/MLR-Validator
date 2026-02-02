@@ -116,13 +116,14 @@ from validation_api import drug_router, research_router
 
 app = FastAPI(title="MLR validation tool")
 
-# CORS Middleware - Added BEFORE routers
+# CORS Middleware - Permissive configuration for POC
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Register both pipeline routers
