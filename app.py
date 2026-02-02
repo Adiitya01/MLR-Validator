@@ -126,6 +126,15 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
+# FORCE CORS ON EVERYTHING (Safety Net)
+@app.middleware("http")
+async def add_cors_header(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    return response
+
 # Register both pipeline routers
 app.include_router(drug_router)
 app.include_router(research_router)
