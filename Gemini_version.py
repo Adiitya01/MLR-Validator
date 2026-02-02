@@ -262,6 +262,7 @@ class ValidationResult:
     page_location: str = ""
     confidence_score: float = 0.0
     matching_method: str = ""
+    analysis_summary: str = ""
     
 class GeminiClient:
 
@@ -935,6 +936,25 @@ class StatementValidator:
         print(f"VALIDATION PIPELINE STARTED")
         print(f"Total rows: {len(df)}")
         print(f"{'='*70}\n")
+
+        # Create output directory if it doesn't exist
+        os.makedirs("output", exist_ok=True)
+
+        # SAVE CONVERSION OUTPUT (INPUT TO VALIDATOR)
+        try:
+            # Convert DF to records, excluding binary 'content' for size
+            debug_df = df.copy()
+            if 'pdf_files_dict' in debug_df.columns:
+                # Remove nested PDF content to keep JSON small
+                def clean_pdf_dict(d):
+                    if not isinstance(d, dict): return d
+                    return {k: {sk: sv for sk, sv in v.items() if sk != 'content'} for k, v in d.items()}
+                debug_df['pdf_files_dict'] = debug_df['pdf_files_dict'].apply(clean_pdf_dict)
+            
+            debug_df.to_json("output/conversion_output.json", orient="records", indent=4)
+            logger.info("[DEBUG] Saved input to output/conversion_output.json")
+        except Exception as e:
+            logger.error(f"[DEBUG] Failed to save conversion debug JSON: {e}")
         
         # GROUP identical statements with different references
         statement_groups = {}
@@ -962,15 +982,30 @@ class StatementValidator:
         logger.info(f"[DEDUP] Grouped {len(df)} rows into {len(statement_groups)} unique statements")
         print(f"[DEDUP] Grouped {len(df)} rows into {len(statement_groups)} unique statements\n")
         
-        results = []
+        # 1. Prepare to store results per unique statement
+        statement_cache = {} # Map statement text -> ValidationResult list
+        
+        # 2. Track counters
         processed = 0
-        skipped = len(df) - sum(len(g['references']) for g in statement_groups.values() if g['references'])
         errors = 0
         
-        # Validate EACH UNIQUE STATEMENT once
+        # 3. Validate EACH UNIQUE STATEMENT once
         for statement, group_data in statement_groups.items():
             if not group_data['references']:
-                logger.debug(f"[SKIP] Statement: Empty references")
+                logger.warning(f"[SKIP] Statement: No references found for '{statement[:30]}...'")
+                # Create a placeholder so we don't lose the row
+                no_ref_res = ValidationResult(
+                    statement=statement,
+                    reference_no="None",
+                    reference="No citation identified in the source text.",
+                    matched_paper="None",
+                    matched_evidence="The system could not identify a superscript or citation number for this specific statement in the PDF.",
+                    validation_result="Refuted",
+                    page_location="N/A",
+                    confidence_score=0.0,
+                    analysis_summary="This statement was extracted but has no linked reference number to validate against."
+                )
+                statement_cache[statement] = [no_ref_res]
                 continue
             
             try:
@@ -992,11 +1027,43 @@ class StatementValidator:
                 page_no = sample_row.get('page_no', None)
                 pdf_files_dict = sample_row.get('pdf_files_dict', {})
                 
+                # HANDLE "Table" REFERENCES GRACEFULLY
+                # These are table cells without superscript citations - mark as Uncited, not Error
+                if combined_refs.lower() == "table" or combined_refs == "":
+                    logger.info(f"[{processed}] [UNCITED] Table data without superscript citation")
+                    uncited_res = ValidationResult(
+                        statement=statement,
+                        reference_no=sample_row.get('reference_no', 0),
+                        reference=sample_row.get('reference', ''),
+                        matched_paper="N/A",
+                        matched_evidence="This statement appears in a table without a superscript citation. It may be general knowledge or require no specific reference.",
+                        validation_result="Uncited",
+                        page_location="Table",
+                        confidence_score=0.5,
+                        matching_method="Table Data",
+                        analysis_summary="No superscript reference was found for this table cell. This is common for headers, categories, or well-known medical facts."
+                    )
+                    statement_cache[statement] = [uncited_res]
+                    continue
+                
                 # Filter PDFs for ALL reference numbers in this group
                 filtered_pdf_dict = self.filter_pdfs_by_references(pdf_files_dict, combined_refs)
                 
                 if not filtered_pdf_dict:
                     logger.warning(f"[{processed}] [FAIL] No matching PDFs for references: {combined_refs}")
+                    # Don't delete the record! Add a placeholder result so the count stays at 44
+                    missing_res = ValidationResult(
+                        statement=statement,
+                        reference_no=sample_row.get('reference_no', 0),
+                        reference=sample_row.get('reference', ''),
+                        matched_paper="None",
+                        matched_evidence="No matching reference PDF was found for the extraction numbers provided.",
+                        validation_result="Reference Missing",
+                        page_location="N/A",
+                        confidence_score=0.0,
+                        analysis_summary=f"The extraction found reference numbers ({combined_refs}), but no uploaded PDF file names started with these numbers."
+                    )
+                    statement_cache[statement] = [missing_res]
                     continue
                 
                 # Validate this statement against its combined reference PDFs
@@ -1008,7 +1075,7 @@ class StatementValidator:
                     page_no=page_no
                 )
                 
-                results.extend(statement_results)
+                statement_cache[statement] = statement_results
                 
                 logger.info(f"[{processed}] [OK] COMPLETE: {len(statement_results)} results from {len(filtered_pdf_dict)} PDFs")
                 print(f"     [OK] Validated against {len(statement_results)} PDFs\n")
@@ -1018,7 +1085,7 @@ class StatementValidator:
                 logger.error(f"[{processed}] [FAIL] ERROR: {str(e)}")
                 print(f"     [FAIL] ERROR: {str(e)}\n")
                 
-                results.append(ValidationResult(
+                error_res = ValidationResult(
                     statement=statement,
                     reference_no=','.join(sorted(str(r) for r in group_data['reference_nos'])),
                     reference=sample_row.get('reference', ''),
@@ -1027,23 +1094,63 @@ class StatementValidator:
                     validation_result="Error",
                     page_location=str(e),
                     confidence_score=0.0,
-                    matching_method="Error"
+                    matching_method="Error",
+                    analysis_summary=f"Python Error: {str(e)}"
+                )
+                statement_cache[statement] = [error_res]
+        
+        # 4. EXPAND results back to original row count
+        final_results = []
+        for idx, row in df.iterrows():
+            stmt_text = row.get('statement', '').strip() if isinstance(row.get('statement', ''), str) else ''
+            
+            if not stmt_text:
+                final_results.append(ValidationResult(
+                    statement="[Empty Statement]",
+                    reference_no="N/A",
+                    reference="N/A",
+                    matched_paper="None",
+                    matched_evidence="Row was empty in source.",
+                    validation_result="Refuted",
+                    page_location="N/A",
+                    confidence_score=0.0,
+                    analysis_summary="This row contained no statement text."
+                ))
+                continue
+                
+            if stmt_text in statement_cache:
+                for res in statement_cache[stmt_text]:
+                    final_results.append(res)
+            else:
+                final_results.append(ValidationResult(
+                    statement=stmt_text,
+                    reference_no="N/A",
+                    reference="N/A",
+                    matched_paper="None",
+                    matched_evidence="Skipped due to processing logic.",
+                    validation_result="Error",
+                    page_location="N/A",
+                    confidence_score=0.0,
+                    analysis_summary="Row failed to map to a validation result."
                 ))
         
-        logger.info("="*70)
-        logger.info("VALIDATION PIPELINE COMPLETE")
-        logger.info(f"Unique Statements: {len(statement_groups)} | Processed: {processed} | Skipped: {skipped} | Errors: {errors}")
-        logger.info(f"Total Results Generated: {len(results)}")
-        logger.info("="*70)
+        logger.info(f"[EXPAND] Expanded {len(statement_cache)} results back to {len(final_results)} rows")
+        print(f"[EXPAND] Expanded {len(statement_cache)} results back to {len(final_results)} rows")
         
-        print(f"\n{'='*70}")
-        print(f"VALIDATION PIPELINE COMPLETED")
-        print(f"Unique Statements: {len(statement_groups)}")
-        print(f"Processed: {processed} | Skipped: {skipped} | Errors: {errors}")
-        print(f"Total Results: {len(results)}")
-        print(f"{'='*70}\n")
+        logger.info("="*70)
+        logger.info(f"VALIDATION PIPELINE COMPLETE (Total: {len(final_results)})")
+        logger.info("="*70)
+
+        # SAVE VALIDATION OUTPUT (FINAL RESULTS)
+        try:
+            results_to_save = [asdict(res) for res in final_results]
+            with open("output/validation_output.json", "w") as f:
+                json.dump(results_to_save, f, indent=4)
+            logger.info("[DEBUG] Saved final results to output/validation_output.json")
+        except Exception as e:
+            logger.error(f"[DEBUG] Failed to save validation debug JSON: {e}")
         
-        return results
+        return final_results
     
     def validate_statement_against_all_papers(self, statement: str, reference_no: int, reference: str, pdf_files_dict: Dict[str, Dict], page_no: Optional[str] = None, validation_type: str = "research") -> List[ValidationResult]:
         """
@@ -1138,7 +1245,8 @@ class StatementValidator:
         combined_evidence_lines = []
         for res in result_list:
             pdf_short_name = Path(res.matched_paper).name
-            evidence = res.matched_evidence.strip()
+            raw_evidence = getattr(res, 'matched_evidence', '')
+            evidence = str(raw_evidence).strip() if raw_evidence is not None else ""
             if evidence:
                 combined_evidence_lines.append(f"- {pdf_short_name}: {evidence}")
             else:
@@ -1166,7 +1274,8 @@ class StatementValidator:
             validation_result=final_result,
             page_location=combined_page_location,
             confidence_score=avg_confidence,
-            matching_method=f"Aggregated ({final_result})"
+            matching_method=f"Aggregated ({final_result})",
+            analysis_summary=f"Consolidated results from {len(individual_results)} sources"
         )
         
         # CLEAN console output - only statement, matched PDFs, and evidence
@@ -1271,9 +1380,9 @@ class StatementValidator:
         logger.info(f"[STMT] Result: {validation_result} ({confidence:.0%}) in {llm_duration:.2f}s")
 
         # ─────── EXTRACT EVIDENCE ───────
-        matched_evidence = llm_result.get("matched_evidence", "").strip()
-        page_location = llm_result.get("page_location", "").strip()
-        analysis_summary = llm_result.get("analysis_summary", "").strip()
+        matched_evidence = str(llm_result.get("matched_evidence", "") or "").strip()
+        page_location = str(llm_result.get("page_location", "") or "").strip()
+        analysis_summary = str(llm_result.get("analysis_summary", "") or "").strip()
         
         # CRITICAL: If result is "Supported" but evidence is empty, use fallback
         if validation_result == "Supported" and not matched_evidence:
@@ -1306,7 +1415,8 @@ class StatementValidator:
             validation_result=validation_result,
             page_location=page_location,
             confidence_score=confidence,
-            matching_method="Direct (Pre-filtered by reference)"
+            matching_method="Direct (Pre-filtered by reference)",
+            analysis_summary=analysis_summary
         )
 
 

@@ -204,7 +204,7 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
     if not pdf_bytes.startswith(b'%PDF'):
         raise ValueError(f"File at {pdf_path} is not a valid PDF file.")
 
-    prompt = '''You are a specialized Vision Extractor for scientific PDF pages. Your goal is to extract specific statements, specifically focusing on superscript citations AND data presented in tables.
+    prompt = '''You are a specialized Vision Extractor for scientific PDF pages. Your goal is to extract ALL statements that have superscript citations, AND all data from tables.
 
     Output a SINGLE JSON array. Each element must follow this schema:
     {
@@ -214,46 +214,52 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
         "statement": "<string>"
     }
 
-    ### INSTRUCTIONS FOR SUPERSCRIPTS (STRICT VERBATIM):
-    Your goal is to extract content EXACTLY as it appears. 
+    ### STEP 1: FIND ALL SUPERSCRIPT CITATIONS
+    Scan the ENTIRE page for superscript numbers (¹, ², ³, ⁴, ⁵, ⁶, ⁷, ⁸, ⁹, ¹⁰, ¹¹, ¹², ¹³, ¹⁴, ¹⁵, ¹⁶, ¹⁷, ¹⁸, ¹⁹, ²⁰, etc.)
     
-    1. **CITATION ON HEADING**: If a superscript citation is found on a section title or heading (e.g., "Introduction¹" or "21. Midline study...²¹"):
-       - **Superscript Number**: Extract the number(s) from the heading.
-       - **Heading**: The heading text itself (without the superscript).
-       - **Statement**: You MUST capture the ENTIRE page content following that heading. 
-         - Specifically, look for and include sections like "Study author(s)", "Study design", "Study objective", "Publication", "Study location", "Study Length", etc.
-         - Do not stop after the citation. Include every paragraph and detail until the next superscript number is found.
-         - If the section continues on the next page, include that too.
+    For EACH superscript found:
+    - Extract the number as "superscript_number"
+    - Extract the text/sentence it is attached to as "statement"
+    - Extract the nearest heading/section title as "heading"
     
-    2. **CITATION IN SENTENCE**: If a superscript citation is found at the end of a sentence:
-       - **Superscript Number**: Extract the number(s).
-       - **Heading**: The nearest section title.
-       - **Statement**: The specific sentence associated with that citation (verbatim).
+    This includes superscripts on:
+    - Headings and titles
+    - Sentences and paragraphs
+    - Bullet points
+    - Image captions
+    - Table cells
 
-    ### INSTRUCTIONS FOR TABLES (CRITICAL):
-    1. Identify any comparison tables or data grids on the page.
-    2. For every distinct cell containing data, create a JSON entry.
-    3. If the table cell text contains a superscript citation (e.g., ¹, ², ³–⁵):
-    - Extract the citation number(s) EXACTLY as they appear.
-    - Set "superscript_number" to those number(s) (e.g., "6", "12,13", "14-15").
-    4. If the table cell text does NOT contain any superscript citation:
-    - Set "superscript_number" to "Table".
-    5. Set "heading" to the Main Table Title or the specific Row Category
-    (e.g., "Cost", "Invasiveness", "Pain or Side Effects").
-    6. Set "statement" using the following strict format:
-    "Row: [Row Header Name] | Column: [Column Header Name] | Content: [Cell Text WITHOUT the superscript]"
-
+    ### STEP 2: EXTRACT ALL TABLE DATA
+    For any comparison tables or data grids:
     
-    *Example of Table Handling:*
-    If a cell has text "$500" where the Row is "Cost" and Column is "Surgery" with a superscript "¹²":
+    1. **SKIP HEADER ROWS** - Do NOT extract the first row if it only contains column labels
+       (e.g., "Category", "Large Volume Paracentesis", "Diuretics", "Indwelling Peritoneal Catheter")
+    
+    2. **FOR EACH DATA CELL:**
+       - If the cell has a superscript: Set "superscript_number" to that number
+       - If the cell has NO superscript: Set "superscript_number" to "Table"
+       - Set "heading" to the Row Category (e.g., "Cost", "Invasiveness")
+       - Set "statement" using format: "Row: [Row Name] | Column: [Column Name] | Content: [Cell Text]"
+
+    *Example - Cell WITH superscript:*
     {
-        "page_number": 1,
-        "superscript_number": "12",
+        "page_number": 2,
+        "superscript_number": "5",
+        "heading": "Procedure Setting",
+        "statement": "Row: Procedure Setting | Column: Large Volume Paracentesis | Content: Outpatient or hospital-based procedure"
+    }
+
+    *Example - Cell WITHOUT superscript:*
+    {
+        "page_number": 2,
+        "superscript_number": "Table",
         "heading": "Cost",
-        "statement": "Row: Cost | Column: Surgery | Content: $500"
+        "statement": "Row: Cost | Column: Large Volume Paracentesis | Content: Procedure cost, Cost of multiple hospital admissions"
     }
 
     ### GENERAL RULES:
+    - Extract EVERY statement with a superscript citation - do not skip any
+    - Extract EVERY table data cell - use "Table" if no superscript is present
     - Return ONLY the JSON array. No markdown, no explanations.
     - If the page has no citations and no tables, return an empty array [].
     '''

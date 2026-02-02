@@ -102,9 +102,15 @@ function App() {
     // results is already the array of validation results from brochure.results
     console.log('Loading from history:', { brochure, results })
 
-    setValidationResults(results || [])
-    setExtractedStatements(results || [])
-    setResultFilter(['Supported', 'Not Found', 'Partially Supported', 'Inconclusive']) // Show all results
+    const normalizedResults = (results || []).map(r => {
+      let status = r.validation_result
+      if (status === 'Partially Supported') status = 'Supported'
+      if (['Refuted', 'Contradicted', 'Reference Missing', 'Error'].includes(status)) status = 'Uncited'
+      return { ...r, validation_result: status }
+    })
+    setValidationResults(normalizedResults)
+    setExtractedStatements(normalizedResults)
+    setResultFilter([]) // Don't show anything by default until a filter is selected
     setMinConfidence(0)
     setExtractionStatus('success')
     setShowHistoryModal(false) // Close modal after selection
@@ -188,8 +194,15 @@ function App() {
               alert('Validation completed but no results were generated.')
               setExtractionStatus('error')
             } else {
-              setExtractedStatements(results)
-              setValidationResults(results)
+              const normalizedResults = results.map(r => {
+                let status = r.validation_result
+                if (status === 'Partially Supported') status = 'Supported'
+                if (['Refuted', 'Contradicted', 'Reference Missing', 'Error'].includes(status)) status = 'Uncited'
+                return { ...r, validation_result: status }
+              })
+              setExtractedStatements(normalizedResults)
+              setValidationResults(normalizedResults)
+              setResultFilter([])
               setExtractionStatus('success')
               setLiveLog('Validation completed successfully')
             }
@@ -234,7 +247,7 @@ function App() {
   }
 
   const filteredResults = validationResults.filter(r => {
-    const matchesFilter = resultFilter.length === 0 || resultFilter.includes(r.validation_result)
+    const matchesFilter = resultFilter.includes(r.validation_result)
     const meetsConfidence = r.confidence_score >= minConfidence
     return matchesFilter && meetsConfidence
   })
@@ -697,8 +710,19 @@ function App() {
                       <div className="filter-group">
                         <label>Filter by Result:</label>
                         <div className="filter-checkboxes">
-                          {['Supported', 'Not Found'].map(status => (
-                            <label key={status} className="checkbox-label">
+                          {['Supported', 'Not Found', 'Uncited'].map(status => (
+                            <label key={status} className="checkbox-label" style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              backgroundColor: resultFilter.includes(status) ? '#eff6ff' : 'transparent',
+                              border: '1px solid',
+                              borderColor: resultFilter.includes(status) ? '#3b82f6' : '#e5e7eb',
+                              cursor: 'pointer',
+                              fontSize: '12px'
+                            }}>
                               <input
                                 type="checkbox"
                                 checked={resultFilter.includes(status)}
@@ -718,7 +742,7 @@ function App() {
                     </div>
 
                     {/* Detailed Results - Only show when filter is selected */}
-                    {resultFilter.length > 0 && filteredResults.length > 0 && (
+                    {filteredResults.length > 0 && (
                       <>
                         <ValidationResults
                           results={filteredResults}
@@ -729,9 +753,17 @@ function App() {
                       </>
                     )}
 
+                    {resultFilter.length === 0 && validationResults.length > 0 && (
+                      <div style={{ padding: '40px', backgroundColor: '#f0f4f8', borderRadius: '12px', marginTop: '20px', border: '2px dashed #cbd5e1' }}>
+                        <p style={{ color: '#475569', textAlign: 'center', fontSize: '16px', fontWeight: '500' }}>
+                          Select one or more filters above to view detailed validation results
+                        </p>
+                      </div>
+                    )}
+
                     {resultFilter.length > 0 && filteredResults.length === 0 && (
-                      <div style={{ padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '8px', marginTop: '20px' }}>
-                        <p style={{ color: '#666', textAlign: 'center' }}>No results match the selected filter</p>
+                      <div style={{ padding: '20px', backgroundColor: '#fef2f2', borderRadius: '8px', marginTop: '20px', border: '1px solid #fee2e2' }}>
+                        <p style={{ color: '#991b1b', textAlign: 'center' }}>No results match the selected filter</p>
                       </div>
                     )}
 

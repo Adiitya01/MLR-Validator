@@ -63,9 +63,10 @@ def build_validation_dataframe(in_text, references, title=""):
             row_val = table_match.group(1).strip()
             col_val = table_match.group(2).strip()
             content_val = table_match.group(3).strip()
-
-            # Build final readable statement for tables ONLY
             statement = f"{row_val}. {col_val}. {content_val}"
+            is_table = True
+        elif ". " in statement and statement.count(". ") >= 2:
+            # Detect new 'Row. Column. Content' format from Gemini
             is_table = True
 
         # ----------------------------------------------------
@@ -195,15 +196,15 @@ def build_validation_rows_image2(data_rows, references):
         )
         reference_no = str(reference_no).strip()
         
-        # Build statement: row_name. statement. column_name
+        # Build statement: row_name. column_name. statement
         if statement_text and column_name:
-            final_statement = f"{row_name}. {statement_text}. {column_name}."
+            final_statement = f"{row_name}. {column_name}. {statement_text}"
         elif statement_text:
-            final_statement = f"{row_name}. {statement_text}."
+            final_statement = f"{row_name}. {statement_text}"
         elif column_name:
-            final_statement = f"{row_name}. {column_name}."
+            final_statement = f"{row_name}. {column_name}"
         else:
-            final_statement = f"{row_name}."
+            final_statement = f"{row_name}"
         
         # Lookup reference text
         reference_text = references.get(reference_no, "")

@@ -2,7 +2,7 @@ export default function DownloadSection({ results }) {
   const downloadExcel = () => {
     // Convert results to CSV format
     const headers = ['Statement', 'Reference No', 'Reference', 'Matched Paper', 'Validation Result', 'Confidence Score', 'Matched Evidence', 'Page Location', 'Matching Method']
-    
+
     const rows = results.map(r => [
       `"${(r.statement || '').replace(/"/g, '""')}"`,
       r.reference_no || '',
@@ -16,7 +16,7 @@ export default function DownloadSection({ results }) {
     ])
 
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
-    
+
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
@@ -38,24 +38,22 @@ export default function DownloadSection({ results }) {
     const summary = {
       total: results.length,
       supported: results.filter(r => r.validation_result === 'Supported').length,
-      contradicted: results.filter(r => r.validation_result === 'Contradicted').length,
-      partiallySupported: results.filter(r => r.validation_result === 'Partially Supported').length,
+      uncited: results.filter(r => r.validation_result === 'Uncited').length,
       notFound: results.filter(r => r.validation_result === 'Not Found').length,
-      avgConfidence: (results.reduce((sum, r) => sum + (r.confidence_score || 0), 0) / results.length).toFixed(3)
+      avgConfidence: (results.reduce((sum, r) => sum + (r.confidence_score || 0), 0) / (results.length || 1)).toFixed(3)
     }
 
     let csv = 'SUMMARY\n'
     csv += `Total Results,${summary.total}\n`
     csv += `Supported,${summary.supported}\n`
-    csv += `Contradicted,${summary.contradicted}\n`
-    csv += `Partially Supported,${summary.partiallySupported}\n`
+    csv += `Uncited,${summary.uncited}\n`
     csv += `Not Found,${summary.notFound}\n`
     csv += `Average Confidence,${summary.avgConfidence}\n\n\n`
 
     csv += 'DETAILED RESULTS\n'
     const headers = ['Statement', 'Reference No', 'Reference', 'Matched Paper', 'Validation Result', 'Confidence Score', 'Matched Evidence']
     csv += headers.join(',') + '\n'
-    
+
     results.forEach(r => {
       const row = [
         `"${(r.statement || '').replace(/"/g, '""')}"`,

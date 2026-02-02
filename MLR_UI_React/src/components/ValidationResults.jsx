@@ -194,12 +194,10 @@ export default function ValidationResults({ results, expandedResult, setExpanded
       case 'Supported':
       case 'Strongly Supported':
         return '#d4edda'
-      case 'Partially Supported':
-        return '#fff3cd'
-      case 'Contradicted':
-        return '#f8d7da'
       case 'Not Found':
         return '#f8f9fa'
+      case 'Uncited':
+        return '#e0e7ff' // Light indigo/blue
       default:
         return '#e2e3e5'
     }
@@ -210,12 +208,10 @@ export default function ValidationResults({ results, expandedResult, setExpanded
       case 'Supported':
       case 'Strongly Supported':
         return '✓'
-      case 'Partially Supported':
-        return '◐'
-      case 'Contradicted':
-        return '✗'
       case 'Not Found':
         return '○'
+      case 'Uncited':
+        return 'ℹ'
       default:
         return '?'
     }

@@ -472,10 +472,8 @@ function getStatusBackgroundColor(status) {
     case 'Supported':
     case 'Strongly Supported':
       return '#dcfce7'
-    case 'Partially Supported':
-      return '#fef08a'
-    case 'Contradicted':
-      return '#fee2e2'
+    case 'Uncited':
+      return '#e0e7ff'
     case 'Not Found':
       return '#f3f4f6'
     default:
@@ -488,10 +486,8 @@ function getStatusTextColor(status) {
     case 'Supported':
     case 'Strongly Supported':
       return '#166534'
-    case 'Partially Supported':
-      return '#854d0e'
-    case 'Contradicted':
-      return '#b91c1c'
+    case 'Uncited':
+      return '#3730a3'
     case 'Not Found':
       return '#6b7280'
     default:
