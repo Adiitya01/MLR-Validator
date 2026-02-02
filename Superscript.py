@@ -214,10 +214,16 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
         "statement": "<string>"
     }
 
-    ### STEP 1: FIND ALL SUPERSCRIPT CITATIONS
-    Scan the ENTIRE page for superscript numbers (¹, ², ³, ⁴, ⁵, ⁶, ⁷, ⁸, ⁹, ¹⁰, ¹¹, ¹², ¹³, ¹⁴, ¹⁵, ¹⁶, ¹⁷, ¹⁸, ¹⁹, ²⁰, etc.)
+    ### CRITICAL RULE: EXCLUDE REFERENCE LIST
+    Before extracting anything, LOCATE the "References" or "Bibliography" section.
+    - IGNORE everything inside that section.
+    - Do NOT extract any text, numbers, or statements from the list of references itself.
+    - Only extract content from the MAIN BODY of the brochure.
     
-    For EACH superscript found:
+    ### STEP 1: FIND ALL SUPERSCRIPT CITATIONS
+    Scan the page (excluding the References section) for superscript numbers.
+    
+    For EACH superscript found :
     - Extract the number as "superscript_number"
     - Extract the text/sentence it is attached to as "statement"
     - Extract the nearest heading/section title as "heading"
@@ -235,33 +241,26 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
     1. **IDENTIFY HEADERS** - Note the labels for Rows (left column) and Columns (top row).
     
     2. **FOR EACH DATA CELL:**
-       - **Find the Citation**: Search for a superscript number in this order:
-         a) Inside the cell itself.
-         b) In the Row Header (the category on the left).
-         c) In the Column Header (the title at the top).
+       - **Find the Citation**: Search for a superscript number in:
+         a) The cell itself.
+         b) The Row Header.
+         c) The Column Header.
        - **Assign Citation**: 
-         - If a number is found in any of those 3 places, set "superscript_number" to that number.
-         - ONLY if no number exists in the cell, row, or column, set "superscript_number" to "Table".
+         - If found, use that number.
+         - If NOT found, you MUST use "Table".
        - **Set Details**:
-         - Set "heading" to the Row Category.
-         - Set "statement" using format: "Row: [Row Name] | Column: [Column Name] | Content: [Cell Text]"
 
-    *Example (Cell gets citation from Row Header):*
-    If Row Header is "Cost ⁵" and cell is "High", extraction is:
-    {
-        "page_number": 2,
-        "superscript_number": "5",
-        "heading": "Cost",
-        "statement": "Row: Cost | Column: Large Volume Paracentesis | Content: High"
-    }
+         - Set "heading" to the Row Category.
+         - Set "statement" using format: "[Row Name]. [Column Name]. [Cell Text]"
 
     ### GENERAL RULES:
-    - BE AGGRESSIVE: Do not use "Table" if a number exists in the row or column header.
-    - Extract EVERY statement with a superscript citation.
+    - **CRITICAL**: Extract EVERY single data cell in the table. Do not skip any.
+    - It is okay to use "superscript_number": "Table" if no number matches.
+    - Extract EVERY statement with a superscript citation in the main text.
     - Return ONLY the JSON array. No markdown, no explanations.
     '''
 
-    models_to_try = ["gemini-1.5-flash-latest", "gemini-2.0-flash", "gemini-1.5-pro"]
+    models_to_try = ["gemini-2.0-flash"]
     response = None
     last_error = None
 

@@ -176,17 +176,17 @@ CRITICAL:
             pdf_file = genai.upload_file(tmp_path, mime_type="application/pdf")
             
             # Send validation request
-            # Fallback model list for robustness
-            working_model = "gemini-1.5-flash-latest"
+            # Prioritize gemini-2.0-flash for consistency
+            working_model = "gemini-2.0-flash"
             try:
-                client = genai.GenerativeModel("gemini-1.5-flash-latest")
+                client = genai.GenerativeModel("gemini-2.0-flash")
                 # Test connectivity
                 client.generate_content("ping", generation_config={"max_output_tokens": 1})
             except Exception:
                 try:
-                    client = genai.GenerativeModel("gemini-2.0-flash")
+                    client = genai.GenerativeModel("gemini-1.5-flash-latest")
                     client.generate_content("ping", generation_config={"max_output_tokens": 1})
-                    working_model = "gemini-2.0-flash"
+                    working_model = "gemini-1.5-flash-latest"
                 except Exception:
                     client = genai.GenerativeModel("gemini-1.5-pro")
                     working_model = "gemini-1.5-pro"

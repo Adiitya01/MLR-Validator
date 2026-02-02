@@ -5,252 +5,130 @@
   "in_text": [
     {
       "page_number": 1,
-      "superscript_number": "1,2",
-      "heading": "Understanding Recurrent Ascites",
-      "statement": "discomfort, and shortness of breath. 1,2"
+      "superscript_number": "1",
+      "heading": "Breast Cancer Burden: Global Trends and Insights from Asia",
+      "statement": "2.3 million new breast cancer cases were diagnosed globally in 2022, with 42.9% of them in Asia."
     },
     {
       "page_number": 1,
-      "superscript_number": "3",
-      "heading": "What Are Your Treatment Options?",
-      "statement": "Compare your options for managing recurrent ascites.³"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "3,4",
-      "heading": "Large Volume Paracentesis",
-      "statement": "drain excess fluid and provide temporary relief from recurrent ascites.3,4"
+      "superscript_number": "2,3",
+      "heading": "Breast Cancer Burden: Global Trends and Insights from Asia",
+      "statement": "63.4% of breast cancer cases are diagnosed at stages I to II in Asia, often occurring at a younger age, which underscores the need for consistent long-term follow-up."
     },
     {
       "page_number": 1,
       "superscript_number": "5",
-      "heading": "Large Volume Paracentesis",
-      "statement": "Outpatient procedure\nperformed in a hospitals"
+      "heading": "Neoadjuvant Chemotherapy (NAC)",
+      "statement": "NAC, administered before surgery to shrink tumors, has become a key approach in the management of locally advanced breast cancer. Increasingly, NAC is also used in early-stage breast cancer to:"
+    },
+    {
+      "page_number": 1,
+      "superscript_number": "4",
+      "heading": "Advances in Imaging",
+      "statement": "MRI and multimodal imaging are particularly beneficial in detecting microlesions."
+    },
+    {
+      "page_number": 1,
+      "superscript_number": "4",
+      "heading": "Advances in Imaging",
+      "statement": "Second-look ultrasound and MRI-guided biopsies further improve detection."
     },
     {
       "page_number": 1,
       "superscript_number": "6",
-      "heading": "Large Volume Paracentesis",
-      "statement": "Repetitive procedure\nrequired whenever fluid\nbuilds up impairing QoL6"
+      "heading": "Current Gaps in Modern Breast Cancer Treatment",
+      "statement": "Precise Localization"
     },
     {
       "page_number": 1,
-      "superscript_number": "7",
-      "heading": "Large Volume Paracentesis",
-      "statement": "Up to 97 mins\nrequired per drainage7"
+      "superscript_number": "4,5",
+      "heading": "Current Gaps in Modern Breast Cancer Treatment",
+      "statement": "Surgical Localization post NAC"
+    },
+    {
+      "page_number": 1,
+      "superscript_number": "6,7",
+      "heading": "Accurate Localization",
+      "statement": "Ensures precise marking of biopsy sites to aid future imaging, interventions and biopsies."
+    },
+    {
+      "page_number": 1,
+      "superscript_number": "6",
+      "heading": "Optimizes Imaging & Localization",
+      "statement": "Optimizes Imaging & Localization"
+    },
+    {
+      "page_number": 1,
+      "superscript_number": "6",
+      "heading": "Improves Surgical Precision",
+      "statement": "Increases the chances of achieving clear lesion margins (90% with markers vs. 31–62% without)."
+    },
+    {
+      "page_number": 1,
+      "superscript_number": "6",
+      "heading": "Supports Pathology & Treatment",
+      "statement": "Facilitates multifocal tumour assessment and accurate tissue sampling."
     },
     {
       "page_number": 1,
       "superscript_number": "8",
-      "heading": "Diuretics",
-      "statement": "Diuretics are medications that increase excretion of sodium and water, aiming to achieve\na negative sodium balance and reduce fluid accumulation in the abdominal cavity.8"
+      "heading": "Guideline Recommendations for Breast Tissue Markers",
+      "statement": "NCCN"
     },
     {
       "page_number": 1,
       "superscript_number": "9",
-      "heading": "Diuretics",
-      "statement": "Oral administration, especially for\nascites from liver cirrhosis\n(requires careful assessment of kidney function,\nrisk of hypovolemia, and ototoxicity)9"
+      "heading": "Guideline Recommendations for Breast Tissue Markers",
+      "statement": "ACS"
     },
     {
       "page_number": 1,
-      "superscript_number": "10,11",
-      "heading": "Diuretics",
-      "statement": "Administered once or\ntwice daily 10,11"
+      "superscript_number": "10",
+      "heading": "Guideline Recommendations for Breast Tissue Markers",
+      "statement": "ASBrS"
     },
     {
       "page_number": 1,
-      "superscript_number": "12,13",
-      "heading": "Diuretics",
-      "statement": "Regular monitoring\nrequired for electrolyte\nimbalance or\nkidney damage 12,13"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "14",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "allowing patients to drain excess fluid at home. This supports greater independence and\nimproved quality of life. 14"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "15",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "One-time outpatient\nprocedure to place catheter 15"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "14",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "Fewer hospitalization\ndays improving QoL14"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "14",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "Drainage performed\nat home14"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "5",
-      "heading": "Category",
-      "statement": "Row: Procedure Setting | Column: Large Volume Paracentesis | Content: Outpatient or\nhospital-based procedures"
-    },
-    {
-      "page_number": 2,
       "superscript_number": "11",
-      "heading": "Category",
-      "statement": "Row: Procedure Setting | Column: Diuretics | Content: Prescribed after assessment of\nbody weight, fluid status, renal\nfunction and electrolytes 11"
+      "heading": "Guideline Recommendations for Breast Tissue Markers",
+      "statement": "CCS"
     },
     {
-      "page_number": 2,
-      "superscript_number": "15",
-      "heading": "Category",
-      "statement": "Row: Procedure Setting | Column: Indwelling Peritoneal Catheter | Content: One-time outpatient\ncatheter insertion 15"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "6",
-      "heading": "Category",
-      "statement": "Row: Frequency of Use | Column: Large Volume Paracentesis | Content: Requires repeated procedures\neach time fluid reaccumulates6"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "11",
-      "heading": "Category",
-      "statement": "Row: Frequency of Use | Column: Diuretics | Content: Daily, long-term therapy¹¹"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "14",
-      "heading": "Category",
-      "statement": "Row: Frequency of Use | Column: Indwelling Peritoneal Catheter | Content: Repeated drainage at home\nas needed 14"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "6",
-      "heading": "Category",
-      "statement": "Row: Hospital Visits | Column: Large Volume Paracentesis | Content: Hospital/clinic visits\neach time fluid builds up6"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "12,13",
-      "heading": "Category",
-      "statement": "Row: Hospital Visits | Column: Diuretics | Content: Regular monitoring of\nelectrolytes & kidney function 12,13"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "14,15",
-      "heading": "Category",
-      "statement": "Row: Hospital Visits | Column: Indwelling Peritoneal Catheter | Content: Hospital visits not required\nonce catheter in place 14,15"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "6",
-      "heading": "Category",
-      "statement": "Row: Cost | Column: Large Volume Paracentesis | Content: - Procedure cost\n- Cost of multiple hospital\nadmissions6"
-    },
-    {
-      "page_number": 2,
+      "page_number": 1,
       "superscript_number": "12",
-      "heading": "Category",
-      "statement": "Row: Cost | Column: Diuretics | Content: Medication cost\nMedical supervision cost12"
+      "heading": "Guideline Recommendations for Breast Tissue Markers",
+      "statement": "ECIBC"
     },
     {
-      "page_number": 2,
-      "superscript_number": "15",
-      "heading": "Category",
-      "statement": "Row: Cost | Column: Indwelling Peritoneal Catheter | Content: - Procedure cost for\ncatheter insertion\nDrainage bottle cost15"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "6",
-      "heading": "Category",
-      "statement": "Row: Invasiveness | Column: Large Volume Paracentesis | Content: Minimally invasive\nbedside procedure6"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "Table",
-      "heading": "Category",
-      "statement": "Row: Invasiveness | Column: Diuretics | Content: Non-invasive (oral medication)"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "16",
-      "heading": "Category",
-      "statement": "Row: Invasiveness | Column: Indwelling Peritoneal Catheter | Content: Minimally invasive insertion 16"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "Table",
-      "heading": "Category",
-      "statement": "Row: Pain or Side Effects | Column: Large Volume Paracentesis | Content: Hypotension, wound infection,\nleakage of fluid at the needle\ninsertion site"
-    },
-    {
-      "page_number": 2,
+      "page_number": 1,
       "superscript_number": "13",
-      "heading": "Category",
-      "statement": "Row: Pain or Side Effects | Column: Diuretics | Content: Electrolyte imbalances,\ndehydration, hypotension,\nototoxicity, renal dysfunction13"
+      "heading": "Guideline Recommendations for Breast Tissue Markers",
+      "statement": "ESMO"
     },
     {
-      "page_number": 2,
-      "superscript_number": "16",
-      "heading": "Category",
-      "statement": "Row: Pain or Side Effects | Column: Indwelling Peritoneal Catheter | Content: Infection and\ncatheter blockage 16"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "16,17",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "Minimally invasive placement: A small tube is inserted through a\ntiny abdomen incision during a simple outpatient procedure. 16,17"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "17",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "Simple home drainage: When fluid builds up, connect the tube to a\nvacuum bottle. Each session takes 5-15 minutes. 17"
-    },
-    {
-      "page_number": 2,
+      "page_number": 1,
       "superscript_number": "14",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "Continuous symptom control: Drain fluid at home, reducing\nhospital visits and improving comfort.14"
+      "heading": "Guideline Recommendations for Breast Tissue Markers",
+      "statement": "Cancer AUS"
     },
     {
-      "page_number": 2,
-      "superscript_number": "18",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "100% catheter\nplacement success. 18"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "14",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "76% had no\nhospital visits due to\ncatheter-related\ncomplications.14"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "19",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "83% to 100%\nof patients enjoyed\nrelief from\nascites symptoms.19"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "14",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "Infection rate\nas low as\n6%.14"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "20",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "The catheter is inserted in the abdomen\nfor draining ascites.20"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "20",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "The protective dressing is virtually\nundetectable under clothing. 20"
+      "page_number": 1,
+      "superscript_number": "15",
+      "heading": "Guideline Recommendations for Breast Tissue Markers",
+      "statement": "BISI"
     }
   ],
   "references": {
-    "023": "https://www.ncbi.nlm.nih.gov/books/NBK470482/? 2.Madhumita Premkumar. Refractory Ascites in Patients With Cirrhosis. JGH Open.2025;9(8).doi:https://doi.org/10.1002/jgh3. 70245 3.Berger JM, Preusser M, Berghoﬀ AS, Bergen ES. Malignant ascites: Current therapy options and treatment prospects. Cancer Treatment Reviews. 2023;121:102646. doi:https://doi.org/10.1016/j.ctrv.2023.102646 4.Aponte EM, O’Rourke MC. Paracentesis. Nih.gov. Published 2019. https://www.ncbi.nlm.nih.gov/books/NBK435998/ 5.Gilani N, Patel N, Gerkin RD, Ramirez FC, Tharalson EE, Patel K. The safety and feasibility of large volume paracentesis performed by an experienced nurse practitioner. Annals of Hepatology. 2019;8(4):359-363. doi:https://doi.org/10.1016/S1665-2681(19)31750-8 6.Macken L, Mason L, Evans C, et al. Palliative long-term abdominal drains versus repeated drainage in individuals with untreatable ascites due to advanced cirrhosis: study protocol for a feasibility randomised controlled trial. Trials. 2018;19(1). doi:https://doi.org/10.1186/s13063-018-2779-0 7.Grabau, CM; Crago, SF; Hoﬀ, LK et al. Performance standards for therapeutic abdominal paracentesis. Hepatology. 2004;40(2):484-488. 15368454 8.Zaccherini G, Tufoni M, Iannone G, Caraceni P. Management of Ascites in Patients with Cirrhosis: An Update. Journal of Clinical Medicine. 2021;10(22):5226. doi:https://doi.org/10.3390/jcm10225226 9.Arumugham VB, Shahin MH. Therapeutic Uses of Diuretic Agents. PubMed. Published 2023. https://www.ncbi.nlm.nih.gov/books/NBK557838/ 10.Sica DA, Carter B, Cushman W, Hamm L. Thiazide and Loop Diuretics. The Journal of Clinical Hypertension. 2011;13(9):639-643. doi:https://doi.org/10.1111/j.1751-7176.2011.00512.x 11.Magdy JS, McVeigh J, Indraratna P. Diuretics in the management of chronic heart failure: When and how. Australian Prescriber. 2022;45(6):200-204. doi:https://doi.org/10.18773/austprescr.2022.069 12.Aithal GP, Palaniyappan N, China L, et al. Guidelines on the management of ascites in cirrhosis. Gut. 2020;70(1):gutjnl-2020-321790. doi:https://doi.org/10.1136/gutjnl-2020-321790 13.Huxel C, Raja A, Ollivierre-Lawrence MD. Loop Diuretics. PubMed. Published 2023. https://www.ncbi.nlm.nih.gov/books/NBK546656/ 14.Amalie Thøgersen, Kristiansen B, Anders Løkke, Hilberg O, Borg M. Indwelling peritoneal and pleural catheters in the management of malignant and non-malignant ascites and pleural eﬀusion: experiences from a Danish tertiary center. European Clinical Respiratory Journal. 2025;12(1). doi:https://doi.org/10.1080/20018525.2025.2529053 15.Tunneled Indwelling Catheters for Malignant Ascites | Palliative Care Network of Wisconsin. Palliative Care Network of Wisconsin. Published August 14, 2025. Accessed September 2, 2025. https://www.mypcnow.org/fast-fact/tunneled-indwelling-catheters-for-malignant-ascites/ 16.Peppelenbosch A, van Kuijk WHM, Bouvy ND, van der Sande FM, Tordoir JHM. Peritoneal dialysis catheter placement technique and complications. Clinical Kidney Journal. 2008;1(suppl 4):iv23-iv28. doi:https://doi.org/10.1093/ndtplus/sfn120 17.Long term drains to treat ascites. Cancerresearchuk.org. Published May 14, 2024. https://www.cancerresearchuk.org/ about-cancer/coping/physically/ﬂuid- abdomen-ascites/long-term-drains 18.Proux A, Dahel Y, de Nonneville A, et al. Safety and Prognostic Factor for Survival in Patients with PleurX Drain for Malignant Ascites: AscitX Study. Journal of Palliative Medicine. Published online October 29, 2024. doi:https://doi.org/10.1089/jpm.2024.0217 19.Courtney A, Nemcek AA, Rosenberg S, et al. Prospective Evaluation of the PleurX Catheter When Used to Treat Recurrent Ascites Associated with Malignancy. J Vasc Interv Radiol 2008;19:1723–1731. 20.PeritX Peritoneal Catheter Kit: Instructions for Use. Procedure Setting Frequency of Use Hospital Visits Cost Invasiveness Pain or Side Eﬀects Daily, long-term therapy11 Regular monitoring of electrolytes & kidney function12,13 - Medication cost - Medical supervision cost12 Non-invasive (oral medication)9 Electrolyte imbalances, dehydration, hypotension, ototoxicity, renal dysfunction13 Outpatient or hospital-based procedure5 Requires repeated procedures each time ﬂuid reaccumulates6 Hospital/clinic visits each time ﬂuid builds up6 - Procedure cost - Cost of multiple hospital admissions6 Minimally invasive bedside procedure6 Hypotension, wound infection, leakage of ﬂuid at the needle insertion site4 One-time outpatient catheter insertion15 Repeated drainage at home as needed14 Hospital visits not required once catheter in place14,15 - Procedure cost for catheter insertion - Drainage bottle cost15 Minimally invasive insertion16 Infection and catheter blockage 16 Indwelling Peritoneal Catheter Minimally invasive placement: A small tube is inserted through a tiny abdomen incision during a simple outpatient procedure.16,17 Simple home drainage: When ﬂuid builds up, connect the tube to a vacuum bottle. Each session takes 5–15 minutes.17 Continuous symptom control: Drain ﬂuid at home, reducing hospital visits and improving comfort.14 Category Diuretics Large Volume Paracentesis Indwelling Peritoneal Catheter Infection rate as low as 6%.14 Prescribed after assessment of body weight, ﬂuid status, renal function and electrolytes11 83% to100% of patients enjoyed relief from ascites symptoms.19 76% had no hospital visits due to catheter-related complications.14 100% catheter placement success18"
+    "1": "Ferlay J, Ervik M, Lam F, et al. Global Cancer Observatory: Cancer Today. International Agency for Research on Cancer; 2024. Accessed May 21, 2025. https://gco.iarc.fr/today",
+    "2": "Park KH, Loibl S, Sohn J, et al. Pan-Asian adapted ESMO Clinical Practice Guidelines for the diagnosis, treatment and follow-up of patients with early breast cancer. ESMO Open.2024;9(5):102974-102974. doi:https://doi.org/10.1016/j.esmoop.2024.102974",
+    "3": "Beadle BM, Woodward WA, Buchholz TA. The Impact of Age on Outcome in Early-Stage Breast Cancer. Seminars in Radiation Oncology. 2011;21(1):26-34. doi:https://doi.org/10.1016/j.semradonc.2010.09.001",
+    "4": "Shah AD, Mehta AK, Talati N, Brem R, Margolies LR. Breast tissue markers: Why? What's out there? How do I choose?. Clin Imaging. 2018;52:123-136.",
+    "5": "P Y, Christina EP, Ramaswami S, Sl H, Natarajan P. Comparative Evaluation of USG-Guided Single Tissue Marker Versus Multiple Tissue Marker Placements in Breast Malignancy Patients Undergoing Neoadjuvant Chemotherapy for Tumor Localization. Cureus.2024;16(7):e65355.6. Martin EA,Chauhan N, Dhevan V, et al. Current status of biopsy markers for the breast in clinical settings. Expert Rev Med Devices. 2022;19(12):965-975.7. Alshafeiy TI, Matich A, Rochman CM, Harvey JA. Advantages and Challenges of Using Breast Biopsy Markers. J Breast Imaging. 2022;4(1):78-95.",
+    "8": "AGuidelines Detail. NCCN. Published 2020. Accessed May 21, 2025. https://www.nccn.org/guidelines/guidelines-detail?id=1419",
+    "9": "American Cancer Society. Core Needle Biopsy of the Breast | Stereotactic Breast Biopsy. www.cancer.org. Published 2022. https://www.cancer.org/cancer/types/breast-cancer/screening-tests-and-early-detection/breast-biopsy/core-needle-biopsy-of-the-breast.html.",
+    "10": "Image-Guided Percutaneous Biopsy of Palpable and Nonpalpable Breast Lesions. https://breastsurgeons.org/docs/statements/Consensus-Guideline-on-Image-Guided-Percutaneous-Biopsy-of-Palpable-and-Nonpalpable -Breast-Lesions.pdf.",
+    "11": "Cancer C. Stereotactic core biopsy. Canadian Cancer Society. Published 2015. https://cancer.ca/en/treatments/ tests-and- procedures/stereotactic-core-biopsy.",
+    "12": "European guidelines on breast cancer screening and diagnosis | European Commission Initiative on Breast and Colorectal cancer. cancer-screening-and-care.jrc.ec.europa.eu. https://cancer-screening-and-care.jrc.ec.europa.eu/en/ecibc/european-breast-cancer- guidelines.13. Loibl S, Varga A, Bachelot T, et al. Early breast cancer: ESMO Clinical Practice Guideline for diagnosis, treatment and follow-up†. Annals of Oncology. 2023;35(2).",
+    "14": "Interpretation of the evidence. Cancer Australia. Published 2017.15. https://www.canceraustralia.gov.au/resources/position-statements/position-statement-use-ﬁne-needle-aspiration-and-core-biopsy-breastbreastscreen-australia-program/ interpretation-evidence.15. Suma Chakrabarthi, Shikha Panwar, Singh T, et al. Best Practice Guidelines for Breast Imaging, Breast Imaging Society, India: Part—2. Annals of the National Academy of Medical Sciences (India). 2022;58(02):069-077 2.3 million new breast cancer cases were diagnosed globally in 2022, with 42.9% of them in Asia.1 Breast Cancer Burden: Global Trends and Insights from Asia 63.4% of breast cancer cases are diagnosed at stages I to II in Asia, often occurring at a younger age, which underscores the need for consistent long-term follow-up.2,3 Recent Trends in Breast Cancer Management Neoadjuvant Chemotherapy (NAC) Downsize tumors Assess treatment response in real-time Improve surgical precision NAC, administered before surgery to shrink tumors, has become a key approach in the management of locally advanced breast cancer.4 Increasingly, NAC is also used in early-stage breast cancer to:5 Advances in Imaging MRI and multimodal imaging are particularly beneﬁcial in detecting microlesions.4 Second-look ultrasound and MRI-guided biopsies further improve detection.4 The Role of Breast Tissue Markers in Modern Oncology Improves Surgical Precision Increases the chances of achieving clear lesion margins (90% with markers vs. 31–62% without).6 Optimizes Imaging & Localization6 Supports Pathology & Treatment Facilitates multifocal tumour assessment and accurate tissue sampling.6 Accurate Localization Ensures precise marking of biopsy sites to aid future imaging, interventions and biopsies.6,7 Guideline Recommendations for Breast Tissue Markers Oncology societies recommend placing a tissue marker (clip) during biopsy of suspicious nodes and breast lesions to accurately guide future surgery, radiation planning, and treatment. USA and Canada NCCN,8 ACS,9 ASBrS,10 CCS11 Asia-Paciﬁc Cancer AUS14 BISI15 Europe ECIBC12 ESMO13 Current Gaps in Modern Breast Cancer Treatment Precise Localization6 Extent of Disease Assessment4 Inter-Modality Correlation4 Surgical Localization post NAC4,5"
   }
 }

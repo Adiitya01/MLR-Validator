@@ -516,7 +516,8 @@ async def process_validation_job(
         results_dicts = [asdict(r) for r in results]
 
         # Optimize & Score
-        results_optimized = [StorageOptimizer.compress_result(r.copy()) for r in results_dicts]
+        # SKIP StorageOptimizer to keep full matched_evidence for UI display
+        results_optimized = [r.copy() for r in results_dicts]
         results_with_scoring = ConfidenceScoringOptimizer.normalize_confidence_scores(results_optimized)
         
         # SAVE STEP 4: Validation Output
