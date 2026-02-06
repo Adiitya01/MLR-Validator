@@ -8,6 +8,7 @@ import PDFHighlighter from './components/PDFHighlighter'
 import History from './components/History'
 import ErrorBoundary from './components/ErrorBoundary'
 import { apiClient } from './api'
+import { jobWebSocket } from './websocket'
 
 function App() {
   const [specialSidebarCollapsed, setSpecialSidebarCollapsed] = useState(true)
@@ -168,60 +169,73 @@ function App() {
       // 1. Start the job and get a Job ID
       const jobId = await apiClient.runPipeline(brochureFile, referenceFiles.map(f => f.file), validationType)
       console.log('[DEBUG] Job started with ID:', jobId)
-      setLiveLog(`Job started (ID: ${jobId.substring(0, 8)}). Please wait...`)
+      setLiveLog(`Job started (ID: ${jobId.substring(0, 8)}). Connecting...`)
 
-      // 2. Poll for status
-      let jobFinished = false
-      let retryCount = 0
-      const maxRetries = 300 // 10 minutes max (2s * 300)
+      // 2. Use WebSocket for real-time status updates (with polling fallback)
+      const useWebSocket = true  // Set to false to use polling instead
 
-      while (!jobFinished && retryCount < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, 2000)) // Wait 2 seconds between checks
+      if (useWebSocket) {
+        // WebSocket approach - instant updates
+        await new Promise((resolve, reject) => {
+          let wsCleanup = null
+          let fallbackTimeout = null
 
-        try {
-          const statusData = await apiClient.checkJobStatus(jobId)
-          console.log('[DEBUG] Job Status:', statusData.state)
+          // Fallback to polling if WebSocket doesn't connect in 5 seconds
+          fallbackTimeout = setTimeout(() => {
+            console.log('[WS] Connection timeout, falling back to polling...')
+            if (wsCleanup) wsCleanup()
+            pollForStatus(jobId, resolve, reject)
+          }, 5000)
 
-          if (statusData.state === 'completed') {
-            setLiveLog('Processing complete! Fetching results...')
-            jobFinished = true
+          wsCleanup = jobWebSocket.connect(jobId, {
+            onStatus: (data) => {
+              clearTimeout(fallbackTimeout)
+              setLiveLog(`${data.message || 'Processing...'}`)
+              console.log('[WS] Status:', data.status)
+            },
+            onComplete: async (data) => {
+              clearTimeout(fallbackTimeout)
+              console.log('[WS] Job completed, fetching results...')
+              setLiveLog('Processing complete! Fetching results...')
 
-            // 3. Fetch final results
-            const fullResults = await apiClient.getResults(jobId)
-            const results = fullResults.results || []
+              try {
+                const fullResults = await apiClient.getResults(jobId)
+                const results = fullResults.results || []
 
-            if (results.length === 0) {
-              alert('Validation completed but no results were generated.')
-              setExtractionStatus('error')
-            } else {
-              const normalizedResults = results.map(r => {
-                let status = r.validation_result
-                if (status === 'Partially Supported') status = 'Supported'
-                if (['Refuted', 'Contradicted', 'Reference Missing', 'Error'].includes(status)) status = 'Uncited'
-                return { ...r, validation_result: status }
-              })
-              setExtractedStatements(normalizedResults)
-              setValidationResults(normalizedResults)
-              setResultFilter([])
-              setExtractionStatus('success')
-              setLiveLog('Validation completed successfully')
+                if (results.length === 0) {
+                  alert('Validation completed but no results were generated.')
+                  setExtractionStatus('error')
+                } else {
+                  const normalizedResults = results.map(r => {
+                    let status = r.validation_result
+                    if (status === 'Partially Supported') status = 'Supported'
+                    if (['Refuted', 'Contradicted', 'Reference Missing', 'Error'].includes(status)) status = 'Uncited'
+                    return { ...r, validation_result: status }
+                  })
+                  setExtractedStatements(normalizedResults)
+                  setValidationResults(normalizedResults)
+                  setResultFilter([])
+                  setExtractionStatus('success')
+                  setLiveLog('Validation completed successfully')
+                }
+                resolve()
+              } catch (err) {
+                reject(err)
+              }
+            },
+            onError: (error) => {
+              clearTimeout(fallbackTimeout)
+              console.log('[WS] Error, falling back to polling:', error)
+              if (wsCleanup) wsCleanup()
+              pollForStatus(jobId, resolve, reject)
             }
-          } else if (statusData.state === 'failed') {
-            throw new Error(statusData.error_message || 'Background job failed')
-          } else {
-            // Still processing
-            setLiveLog(`Validating... (${statusData.state})`)
-          }
-        } catch (err) {
-          console.error('Polling error:', err)
-          // Don't stop on single network error, just keep trying until maxRetries
-        }
-
-        retryCount++
-      }
-
-      if (!jobFinished) {
-        throw new Error('Validation timed out. Please check History later.')
+          })
+        })
+      } else {
+        // Polling approach (fallback)
+        await new Promise((resolve, reject) => {
+          pollForStatus(jobId, resolve, reject)
+        })
       }
 
       // Refresh History component after validation
@@ -237,7 +251,65 @@ function App() {
       setLiveLog(`Error: ${error.message}`)
     } finally {
       isValidatingSet(false)
+      jobWebSocket.disconnect()  // Clean up WebSocket connection
     }
+  }
+
+  // Polling fallback function (used if WebSocket fails)
+  const pollForStatus = async (jobId, resolve, reject) => {
+    let retryCount = 0
+    const maxRetries = 300 // 10 minutes max
+
+    const poll = async () => {
+      if (retryCount >= maxRetries) {
+        reject(new Error('Validation timed out. Please check History later.'))
+        return
+      }
+
+      try {
+        const statusData = await apiClient.checkJobStatus(jobId)
+        console.log('[POLL] Job Status:', statusData.state)
+
+        if (statusData.state === 'completed') {
+          setLiveLog('Processing complete! Fetching results...')
+
+          const fullResults = await apiClient.getResults(jobId)
+          const results = fullResults.results || []
+
+          if (results.length === 0) {
+            alert('Validation completed but no results were generated.')
+            setExtractionStatus('error')
+          } else {
+            const normalizedResults = results.map(r => {
+              let status = r.validation_result
+              if (status === 'Partially Supported') status = 'Supported'
+              if (['Refuted', 'Contradicted', 'Reference Missing', 'Error'].includes(status)) status = 'Uncited'
+              return { ...r, validation_result: status }
+            })
+            setExtractedStatements(normalizedResults)
+            setValidationResults(normalizedResults)
+            setResultFilter([])
+            setExtractionStatus('success')
+            setLiveLog('Validation completed successfully')
+          }
+          resolve()
+          return
+        } else if (statusData.state === 'failed') {
+          reject(new Error(statusData.error_message || 'Background job failed'))
+          return
+        } else {
+          setLiveLog(`Validating... (${statusData.state})`)
+        }
+      } catch (err) {
+        console.error('Polling error:', err)
+        // Don't stop on single network error
+      }
+
+      retryCount++
+      setTimeout(poll, 2000) // Poll every 2 seconds
+    }
+
+    poll()
   }
 
   const removeBrochure = () => setBrochureFile(null)

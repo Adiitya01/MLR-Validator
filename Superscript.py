@@ -204,7 +204,7 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
     if not pdf_bytes.startswith(b'%PDF'):
         raise ValueError(f"File at {pdf_path} is not a valid PDF file.")
 
-    prompt = '''You are a specialized Vision Extractor for scientific PDF pages. Your goal is to extract ALL statements that have superscript citations, AND all data from tables.
+    prompt = '''You are a specialized Vision Extractor for scientific PDF pages. Your goal is to extract EVERYTHING. You must be extremely granular and extract on a "Statement-By-Statement" basis so no superscript is missed.
 
     Output a SINGLE JSON array. Each element must follow this schema:
     {
@@ -214,50 +214,41 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
         "statement": "<string>"
     }
 
-    ### CRITICAL RULE: EXCLUDE REFERENCE LIST
-    Before extracting anything, LOCATE the "References" or "Bibliography" section.
-    - IGNORE everything inside that section.
-    - Do NOT extract any text, numbers, or statements from the list of references itself.
-    - Only extract content from the MAIN BODY of the brochure.
-    
-    ### STEP 1: FIND ALL SUPERSCRIPT CITATIONS
-    Scan the page (excluding the References section) for superscript numbers.
-    
-    For EACH superscript found :
-    - Extract the number as "superscript_number"
-    - Extract the text/sentence it is attached to as "statement"
-    - Extract the nearest heading/section title as "heading"
-    
-    This includes superscripts on:
-    - Headings and titles
-    - Sentences and paragraphs
-    - Bullet points
-    - Image captions
-    - Table cells
+    ### CRITICAL RULES:
+    1. **NO SKIPPING (ZERO-LOSS POLICY)**: You are not allowed to summarize. If a heading has a paragraph under it, you must extract EVERY statement in that paragraph if it relates to a superscript. Special focus: capture the "63.4% stage I-II diagnosis" statistic in the Epidemiology section.
+    2. **STATEMENT-BY-STATEMENT**: If one paragraph has 3 different superscripts (e.g., 1, 2, and 3), you must create 3 SEPARATE JSON objects. 
+    3. **CAPTURE THE "WHY"**: Do not just extract the heading. Extract the explanation, the statistics (like 63.4%, 2.3 million cases, 42.9%), and the full descriptive text associated with the superscript.
+    4. **NUMERICAL PRECISION & MAPPING**: Ensure all percentages and case numbers are captured exactly. You MUST be 100% accurate with the superscript number. If a fact is cited by "7", do not ever assign it "1". Check the number's physical proximity to the text carefully.
+    5. **TITLE + BODY RULE**: If the superscript is attached to a **title or subtitle** (like "National Comprehensive Cancer Network¹⁴"), you MUST include BOTH the title AND the full explanatory paragraph that follows it in the "statement" field.
+       - Example: "National Comprehensive Cancer Network¹⁴ - Encourages to place clips during biopsy of suspicious axillary nodes to guide surgery. In cases with palpable or multiple suspicious nodes, malignancy must be confirmed by FNA or core biopsy with clip placement."
 
+    ### STEP 1: FIND ALL SUPERSCRIPT CITATIONS
+    Scan every pixel of the page for superscript numbers (¹, ², ³, ⁴, ⁵, ⁶, ⁷, ⁸, ⁹, ¹⁰, ¹¹, ¹², ¹³, ¹⁴, ¹⁵, ¹⁶, ¹⁷, ¹⁸, ¹⁹, ²⁰, ²¹, etc.)
+    
+    For EACH individual superscript found:
+    - **superscript_number**: The exact number or range (e.g., "1,2", "3", "7"). Be extremely careful to match the number to the correct sentence.
+    - **statement**: Extract on a "STATEMENT-BY-STATEMENT" basis. Capture the FULL descriptive text, explanation, and any statistics (like 63.4%, 90% success, 0% false negatives) cited by the number. **If the superscript is on a title, include the title AND all body text below it.**
+    - **heading**: The nearest clear Section Header or Title (e.g., "Epidemiology", "USA and Canada", "Asia-Pacific").
+    
     ### STEP 2: EXTRACT ALL TABLE DATA
     For any comparison tables or data grids:
     
     1. **IDENTIFY HEADERS** - Note the labels for Rows (left column) and Columns (top row).
     
     2. **FOR EACH DATA CELL:**
-       - **Find the Citation**: Search for a superscript number in:
-         a) The cell itself.
-         b) The Row Header.
-         c) The Column Header.
+       - **Find the Citation**: Search for a superscript number in this order:
+         a) Inside the cell itself.
+         b) In the Row Header (the category on the left).
+         c) In the Column Header (the title at the top).
        - **Assign Citation**: 
-         - If found, use that number.
-         - If NOT found, you MUST use "Table".
+         - If a number is found in any of those 3 places, set "superscript_number" to that number.
+         - ONLY if no number exists in the cell, row, or column, set "superscript_number" to "Table".
        - **Set Details**:
-
          - Set "heading" to the Row Category.
-         - Set "statement" using format: "[Row Name]. [Column Name]. [Cell Text]"
+         - Set "statement" using format: "Row: [Row Name] | Column: [Column Name] | Content: [Cell Text]"
 
-    ### GENERAL RULES:
-    - **CRITICAL**: Extract EVERY single data cell in the table. Do not skip any.
-    - It is okay to use "superscript_number": "Table" if no number matches.
-    - Extract EVERY statement with a superscript citation in the main text.
-    - Return ONLY the JSON array. No markdown, no explanations.
+    ### STEP 3: IGNORE REFERENCES
+    Do NOT extract the list of references at the bottom of the page. Only extract the in-text statements.
     '''
 
     models_to_try = ["gemini-2.0-flash"]
@@ -274,7 +265,7 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
                         types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
                         prompt
                     ],
-                    config=types.GenerateContentConfig(temperature=0.0)
+                    config=types.GenerateContentConfig(temperature=0.0 , top_k=1)
                 )
             else:
                 # Legacy API (google-generativeai)
