@@ -85,171 +85,6 @@ def json_default(o):
         return o.item()   # Convert NumPy types to normal Python numbers
     return str(o)         # Fallback
 
-# PHARMACEUTICAL REFERENCE VALIDATOR - Using Gemini
-
-def validate_statement_with_reference(statement: str, reference_document: bytes, reference_no: str = "") -> Dict:
-    """
-    Validate a pharmaceutical statement against a reference document using Gemini.
-    
-    Args:
-        statement: The statement to validate (e.g., "amikacin. pH. 3.5-5.5")
-        reference_document: PDF document as bytes
-        reference_no: Reference number for tracking
-    
-    Returns:
-        Dict with validation result, evidence, confidence score, etc.
-    """
-    
-    # Initialize Gemini API
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        return {
-            "statement": statement,
-            "reference_no": reference_no,
-            "validation_result": "Error",
-            "matched_evidence": "API key not configured",
-            "page_location": "N/A",
-            "confidence_score": 0.0,
-            "analysis_summary": "GEMINI_API_KEY not set in environment"
-        }
-    
-    genai.configure(api_key=api_key)
-    
-    validation_prompt = f"""You are a pharmaceutical reference validator.
-
-You are given:
-1. A STATEMENT extracted from a drug compatibility table: "{statement}"
-2. A COMPLETE REFERENCE DOCUMENT (PDF)
-
----EXACT STATEMENT TO VALIDATE---
-"{statement}"
-
----YOUR TASK---
-The STATEMENT may be in one of two forms:
-
-A) "DrugName. PH_Values.ColumnName."
-   → The document should mention the drug in relation to the ColumnName concept and PH Values.
-
-B) "DrugName. ColumnName. Detailed instruction."
-   → The document should explicitly support or contradict the instruction.
-
-VALIDATION STEPS:
-1. Read the full document carefully
-2. Search for the drug name mentioned in the statement
-3. Look for the specific property/concept mentioned (PH, compatibility, etc.)
-4. Decide if the document SUPPORTS, CONTRADICTS, or does NOT MENTION the statement
-5. Extract ONLY exact quoted text from the document as evidence (no paraphrasing)
-6. Identify where the evidence appears (page or section)
-
-RULES:
-- If the drug is discussed with the property/concept mentioned → Supported.
-- If the drug is mentioned but the property/concept is absent → Not Found.
-- If the drug is not mentioned at all → Not Found.
-- Use tables, footnotes, and captions if relevant.
-- Extract verbatim text only - never paraphrase
-
-RESPONSE (JSON ONLY):
-{{
-  "statement": "{statement}",
-  "validation_result": "Supported" | "Contradicted" | "Not Found",
-  "matched_evidence": "Exact quotes from the document",
-  "page_location": "Page or section where found",
-  "confidence_score": 0.0-1.0,
-  "analysis_summary": "Brief reasoning"
-}}
-
-CRITICAL:
-- Return only valid JSON
-- Always include the statement in response
-- Evidence must be verbatim text from the document
-- confidence_score must be between 0.0 and 1.0
-"""
-    
-    try:
-        # Create temporary file for PDF
-        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_file:
-            tmp_file.write(reference_document)
-            tmp_path = tmp_file.name
-        
-        try:
-            # Upload PDF to Gemini
-            pdf_file = genai.upload_file(tmp_path, mime_type="application/pdf")
-            
-            # Send validation request
-            # Fallback model list for robustness
-            working_model = "gemini-1.5-flash-latest"
-            try:
-                client = genai.GenerativeModel("gemini-1.5-flash-latest")
-                # Test connectivity
-                client.generate_content("ping", generation_config={"max_output_tokens": 1})
-            except Exception:
-                try:
-                    client = genai.GenerativeModel("gemini-2.0-flash")
-                    client.generate_content("ping", generation_config={"max_output_tokens": 1})
-                    working_model = "gemini-2.0-flash"
-                except Exception:
-                    client = genai.GenerativeModel("gemini-1.5-pro")
-                    working_model = "gemini-1.5-pro"
-            
-            response = client.generate_content([
-                validation_prompt,
-                pdf_file
-            ])
-            
-            # Extract JSON from response
-            response_text = response.text.strip()
-            
-            # Clean up markdown code blocks if present
-            if response_text.startswith("```"):
-                match = re.search(r"```(?:json)?\s*(.*?)\s*```", response_text, re.DOTALL)
-                if match:
-                    response_text = match.group(1).strip()
-            
-            # Parse JSON
-            result = json.loads(response_text)
-            
-            # Ensure statement is included
-            if "statement" not in result:
-                result["statement"] = statement
-            if "reference_no" not in result:
-                result["reference_no"] = reference_no
-            
-            # Ensure confidence_score is between 0.0 and 1.0
-            if "confidence_score" in result:
-                result["confidence_score"] = max(0.0, min(1.0, float(result.get("confidence_score", 0.0))))
-            
-            return result
-            
-        finally:
-            # Clean up temporary file
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
-    
-    except json.JSONDecodeError as e:
-        logger.error(f"[PHARM] JSON parsing error: {str(e)}")
-        return {
-            "statement": statement,
-            "reference_no": reference_no,
-            "validation_result": "Error",
-            "matched_evidence": "Failed to parse Gemini response",
-            "page_location": "N/A",
-            "confidence_score": 0.0,
-            "analysis_summary": f"JSON parsing error: {str(e)}"
-        }
-    
-    except Exception as e:
-        logger.error(f"[PHARM] Validation error: {str(e)}")
-        return {
-            "statement": statement,
-            "reference_no": reference_no,
-            "validation_result": "Error",
-            "matched_evidence": str(e),
-            "page_location": "N/A",
-            "confidence_score": 0.0,
-            "analysis_summary": f"Validation error: {str(e)}"
-        }
-
-
 @dataclass
 class ValidationResult:
     """Data structure for validation results"""
@@ -266,7 +101,7 @@ class ValidationResult:
     
 class GeminiClient:
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-1.5-flash-latest", base_url: str = "https://generativelanguage.googleapis.com"):
+    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-2.0-flash", base_url: str = "https://generativelanguage.googleapis.com"):
 
         self.model = model
         self.base_url = base_url.rstrip('/')
@@ -302,7 +137,7 @@ class GeminiClient:
             # Try keys until one works
         for key in unique_keys:
             # List of models to try in order of preference
-            models_to_try = [self.model, "gemini-1.5-flash-latest", "gemini-1.5-pro", "gemini-2.0-flash"]
+            models_to_try = [self.model, "gemini-2.0-flash"]
             
             # Remove duplicates while preserving order
             models_to_try = [m for i, m in enumerate(models_to_try) if m not in models_to_try[:i]]
@@ -377,10 +212,16 @@ class GeminiClient:
                 return False
             
             response = self.client.generate_content("ping", generation_config={"max_output_tokens": 8})
-            if response and hasattr(response, 'text'):
+            # Handle response safely - check if candidates exist and have content
+            try:
+                if response and response.candidates and response.candidates[0].content.parts:
+                    return True
+                # If we can access text without error, it's valid
+                _ = response.text
                 return True
-            else:
-                return True
+            except Exception:
+                # If we get here, response is blocked or empty
+                return True # Technically we connected, even if it blocked 'ping'
         except Exception as e:
             logger.error(f"Gemini connection test failed: {str(e)}")
             return False
@@ -441,7 +282,13 @@ class GeminiClient:
                 }
             )
             
-            return response.text
+            try:
+                return response.text
+            except ValueError:
+                # Handle blocked/safety-filtered responses
+                if response.prompt_feedback:
+                    logger.warning(f"Gemini blocked response: {response.prompt_feedback}")
+                return ""
         except Exception as e:
             raise
 
@@ -465,7 +312,12 @@ class GeminiClient:
                 }
             )
             
-            return response.text
+            try:
+                return response.text
+            except ValueError:
+                if response.prompt_feedback:
+                    logger.warning(f"Gemini blocked response (PDF mode): {response.prompt_feedback}")
+                return ""
         except Exception as e:
             raise
 
@@ -579,6 +431,8 @@ CRITICAL RULES:
 
         prompt = f"""You are an expert scientific research validator with deep expertise in analyzing academic papers and validating claims made in research statements.
 
+Statement provided to you is in Title.statement format. You have to validate the statement against the provided research paper title is only for context of topic.
+
 Your task is to thoroughly analyze a STATEMENT against the provided RESEARCH PAPER and determine:
 1. Whether the paper SUPPORTS, CONTRADICTS, or does NOT MENTION the claim
 2. Extract the exact evidence from the paper that supports or refutes the claim
@@ -594,6 +448,13 @@ IMPORTANT INSTRUCTIONS:
 - Be thorough and provide HIGH QUALITY analysis that goes beyond surface-level matching
 - Consider context, methodology, and conclusions when evaluating support/contradiction
 - Examine tables, figures, and captions for supporting evidence
+
+WORD-TO-WORD MATCHING PRIORITY:Xx
+- If the statement contains ONLY words (no numbers, percentages, statistics, or special numeric data), FIRST attempt exact word-to-word matching
+- Search for the exact words/phrases from the statement appearing verbatim in the paper
+- If exact word-to-word match is found, report it as evidence with high confidence
+- If NO exact word-to-word match is found, THEN perform semantic/contextual matching to find semantically equivalent content
+- Always indicate in the analysis_summary whether the match was "exact word-to-word" or "semantic/contextual"
 
 ---STATEMENT TO VALIDATE---
 {statement}

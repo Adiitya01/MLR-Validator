@@ -1,256 +1,992 @@
-{
-  "title": null,
-  "author": null,
-  "footnotes": [],
-  "in_text": [
-    {
-      "page_number": 1,
-      "superscript_number": "1,2",
-      "heading": "Understanding Recurrent Ascites",
-      "statement": "discomfort, and shortness of breath. 1,2"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "3",
-      "heading": "What Are Your Treatment Options?",
-      "statement": "Compare your options for managing recurrent ascites.³"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "3,4",
-      "heading": "Large Volume Paracentesis",
-      "statement": "drain excess fluid and provide temporary relief from recurrent ascites.3,4"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "5",
-      "heading": "Large Volume Paracentesis",
-      "statement": "Outpatient procedure\nperformed in a hospitals"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "6",
-      "heading": "Large Volume Paracentesis",
-      "statement": "Repetitive procedure\nrequired whenever fluid\nbuilds up impairing QoL6"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "7",
-      "heading": "Large Volume Paracentesis",
-      "statement": "Up to 97 mins\nrequired per drainage7"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "8",
-      "heading": "Diuretics",
-      "statement": "Diuretics are medications that increase excretion of sodium and water, aiming to achieve\na negative sodium balance and reduce fluid accumulation in the abdominal cavity.8"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "9",
-      "heading": "Diuretics",
-      "statement": "Oral administration, especially for\nascites from liver cirrhosis\n(requires careful assessment of kidney function,\nrisk of hypovolemia, and ototoxicity)9"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "10,11",
-      "heading": "Diuretics",
-      "statement": "Administered once or\ntwice daily 10,11"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "12,13",
-      "heading": "Diuretics",
-      "statement": "Regular monitoring\nrequired for electrolyte\nimbalance or\nkidney damage 12,13"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "14",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "allowing patients to drain excess fluid at home. This supports greater independence and\nimproved quality of life. 14"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "15",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "One-time outpatient\nprocedure to place catheter 15"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "14",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "Fewer hospitalization\ndays improving QoL14"
-    },
-    {
-      "page_number": 1,
-      "superscript_number": "14",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "Drainage performed\nat home14"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "5",
-      "heading": "Category",
-      "statement": "Row: Procedure Setting | Column: Large Volume Paracentesis | Content: Outpatient or\nhospital-based procedures"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "11",
-      "heading": "Category",
-      "statement": "Row: Procedure Setting | Column: Diuretics | Content: Prescribed after assessment of\nbody weight, fluid status, renal\nfunction and electrolytes 11"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "15",
-      "heading": "Category",
-      "statement": "Row: Procedure Setting | Column: Indwelling Peritoneal Catheter | Content: One-time outpatient\ncatheter insertion 15"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "6",
-      "heading": "Category",
-      "statement": "Row: Frequency of Use | Column: Large Volume Paracentesis | Content: Requires repeated procedures\neach time fluid reaccumulates6"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "11",
-      "heading": "Category",
-      "statement": "Row: Frequency of Use | Column: Diuretics | Content: Daily, long-term therapy¹¹"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "14",
-      "heading": "Category",
-      "statement": "Row: Frequency of Use | Column: Indwelling Peritoneal Catheter | Content: Repeated drainage at home\nas needed 14"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "6",
-      "heading": "Category",
-      "statement": "Row: Hospital Visits | Column: Large Volume Paracentesis | Content: Hospital/clinic visits\neach time fluid builds up6"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "12,13",
-      "heading": "Category",
-      "statement": "Row: Hospital Visits | Column: Diuretics | Content: Regular monitoring of\nelectrolytes & kidney function 12,13"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "14,15",
-      "heading": "Category",
-      "statement": "Row: Hospital Visits | Column: Indwelling Peritoneal Catheter | Content: Hospital visits not required\nonce catheter in place 14,15"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "6",
-      "heading": "Category",
-      "statement": "Row: Cost | Column: Large Volume Paracentesis | Content: - Procedure cost\n- Cost of multiple hospital\nadmissions6"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "12",
-      "heading": "Category",
-      "statement": "Row: Cost | Column: Diuretics | Content: Medication cost\nMedical supervision cost12"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "15",
-      "heading": "Category",
-      "statement": "Row: Cost | Column: Indwelling Peritoneal Catheter | Content: - Procedure cost for\ncatheter insertion\nDrainage bottle cost15"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "6",
-      "heading": "Category",
-      "statement": "Row: Invasiveness | Column: Large Volume Paracentesis | Content: Minimally invasive\nbedside procedure6"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "Table",
-      "heading": "Category",
-      "statement": "Row: Invasiveness | Column: Diuretics | Content: Non-invasive (oral medication)"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "16",
-      "heading": "Category",
-      "statement": "Row: Invasiveness | Column: Indwelling Peritoneal Catheter | Content: Minimally invasive insertion 16"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "Table",
-      "heading": "Category",
-      "statement": "Row: Pain or Side Effects | Column: Large Volume Paracentesis | Content: Hypotension, wound infection,\nleakage of fluid at the needle\ninsertion site"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "13",
-      "heading": "Category",
-      "statement": "Row: Pain or Side Effects | Column: Diuretics | Content: Electrolyte imbalances,\ndehydration, hypotension,\nototoxicity, renal dysfunction13"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "16",
-      "heading": "Category",
-      "statement": "Row: Pain or Side Effects | Column: Indwelling Peritoneal Catheter | Content: Infection and\ncatheter blockage 16"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "16,17",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "Minimally invasive placement: A small tube is inserted through a\ntiny abdomen incision during a simple outpatient procedure. 16,17"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "17",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "Simple home drainage: When fluid builds up, connect the tube to a\nvacuum bottle. Each session takes 5-15 minutes. 17"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "14",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "Continuous symptom control: Drain fluid at home, reducing\nhospital visits and improving comfort.14"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "18",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "100% catheter\nplacement success. 18"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "14",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "76% had no\nhospital visits due to\ncatheter-related\ncomplications.14"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "19",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "83% to 100%\nof patients enjoyed\nrelief from\nascites symptoms.19"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "14",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "Infection rate\nas low as\n6%.14"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "20",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "The catheter is inserted in the abdomen\nfor draining ascites.20"
-    },
-    {
-      "page_number": 2,
-      "superscript_number": "20",
-      "heading": "Indwelling Peritoneal Catheter",
-      "statement": "The protective dressing is virtually\nundetectable under clothing. 20"
-    }
-  ],
-  "references": {
-    "023": "https://www.ncbi.nlm.nih.gov/books/NBK470482/? 2.Madhumita Premkumar. Refractory Ascites in Patients With Cirrhosis. JGH Open.2025;9(8).doi:https://doi.org/10.1002/jgh3. 70245 3.Berger JM, Preusser M, Berghoﬀ AS, Bergen ES. Malignant ascites: Current therapy options and treatment prospects. Cancer Treatment Reviews. 2023;121:102646. doi:https://doi.org/10.1016/j.ctrv.2023.102646 4.Aponte EM, O’Rourke MC. Paracentesis. Nih.gov. Published 2019. https://www.ncbi.nlm.nih.gov/books/NBK435998/ 5.Gilani N, Patel N, Gerkin RD, Ramirez FC, Tharalson EE, Patel K. The safety and feasibility of large volume paracentesis performed by an experienced nurse practitioner. Annals of Hepatology. 2019;8(4):359-363. doi:https://doi.org/10.1016/S1665-2681(19)31750-8 6.Macken L, Mason L, Evans C, et al. Palliative long-term abdominal drains versus repeated drainage in individuals with untreatable ascites due to advanced cirrhosis: study protocol for a feasibility randomised controlled trial. Trials. 2018;19(1). doi:https://doi.org/10.1186/s13063-018-2779-0 7.Grabau, CM; Crago, SF; Hoﬀ, LK et al. Performance standards for therapeutic abdominal paracentesis. Hepatology. 2004;40(2):484-488. 15368454 8.Zaccherini G, Tufoni M, Iannone G, Caraceni P. Management of Ascites in Patients with Cirrhosis: An Update. Journal of Clinical Medicine. 2021;10(22):5226. doi:https://doi.org/10.3390/jcm10225226 9.Arumugham VB, Shahin MH. Therapeutic Uses of Diuretic Agents. PubMed. Published 2023. https://www.ncbi.nlm.nih.gov/books/NBK557838/ 10.Sica DA, Carter B, Cushman W, Hamm L. Thiazide and Loop Diuretics. The Journal of Clinical Hypertension. 2011;13(9):639-643. doi:https://doi.org/10.1111/j.1751-7176.2011.00512.x 11.Magdy JS, McVeigh J, Indraratna P. Diuretics in the management of chronic heart failure: When and how. Australian Prescriber. 2022;45(6):200-204. doi:https://doi.org/10.18773/austprescr.2022.069 12.Aithal GP, Palaniyappan N, China L, et al. Guidelines on the management of ascites in cirrhosis. Gut. 2020;70(1):gutjnl-2020-321790. doi:https://doi.org/10.1136/gutjnl-2020-321790 13.Huxel C, Raja A, Ollivierre-Lawrence MD. Loop Diuretics. PubMed. Published 2023. https://www.ncbi.nlm.nih.gov/books/NBK546656/ 14.Amalie Thøgersen, Kristiansen B, Anders Løkke, Hilberg O, Borg M. Indwelling peritoneal and pleural catheters in the management of malignant and non-malignant ascites and pleural eﬀusion: experiences from a Danish tertiary center. European Clinical Respiratory Journal. 2025;12(1). doi:https://doi.org/10.1080/20018525.2025.2529053 15.Tunneled Indwelling Catheters for Malignant Ascites | Palliative Care Network of Wisconsin. Palliative Care Network of Wisconsin. Published August 14, 2025. Accessed September 2, 2025. https://www.mypcnow.org/fast-fact/tunneled-indwelling-catheters-for-malignant-ascites/ 16.Peppelenbosch A, van Kuijk WHM, Bouvy ND, van der Sande FM, Tordoir JHM. Peritoneal dialysis catheter placement technique and complications. Clinical Kidney Journal. 2008;1(suppl 4):iv23-iv28. doi:https://doi.org/10.1093/ndtplus/sfn120 17.Long term drains to treat ascites. Cancerresearchuk.org. Published May 14, 2024. https://www.cancerresearchuk.org/ about-cancer/coping/physically/ﬂuid- abdomen-ascites/long-term-drains 18.Proux A, Dahel Y, de Nonneville A, et al. Safety and Prognostic Factor for Survival in Patients with PleurX Drain for Malignant Ascites: AscitX Study. Journal of Palliative Medicine. Published online October 29, 2024. doi:https://doi.org/10.1089/jpm.2024.0217 19.Courtney A, Nemcek AA, Rosenberg S, et al. Prospective Evaluation of the PleurX Catheter When Used to Treat Recurrent Ascites Associated with Malignancy. J Vasc Interv Radiol 2008;19:1723–1731. 20.PeritX Peritoneal Catheter Kit: Instructions for Use. Procedure Setting Frequency of Use Hospital Visits Cost Invasiveness Pain or Side Eﬀects Daily, long-term therapy11 Regular monitoring of electrolytes & kidney function12,13 - Medication cost - Medical supervision cost12 Non-invasive (oral medication)9 Electrolyte imbalances, dehydration, hypotension, ototoxicity, renal dysfunction13 Outpatient or hospital-based procedure5 Requires repeated procedures each time ﬂuid reaccumulates6 Hospital/clinic visits each time ﬂuid builds up6 - Procedure cost - Cost of multiple hospital admissions6 Minimally invasive bedside procedure6 Hypotension, wound infection, leakage of ﬂuid at the needle insertion site4 One-time outpatient catheter insertion15 Repeated drainage at home as needed14 Hospital visits not required once catheter in place14,15 - Procedure cost for catheter insertion - Drainage bottle cost15 Minimally invasive insertion16 Infection and catheter blockage 16 Indwelling Peritoneal Catheter Minimally invasive placement: A small tube is inserted through a tiny abdomen incision during a simple outpatient procedure.16,17 Simple home drainage: When ﬂuid builds up, connect the tube to a vacuum bottle. Each session takes 5–15 minutes.17 Continuous symptom control: Drain ﬂuid at home, reducing hospital visits and improving comfort.14 Category Diuretics Large Volume Paracentesis Indwelling Peritoneal Catheter Infection rate as low as 6%.14 Prescribed after assessment of body weight, ﬂuid status, renal function and electrolytes11 83% to100% of patients enjoyed relief from ascites symptoms.19 76% had no hospital visits due to catheter-related complications.14 100% catheter placement success18"
+[
+  {
+    "page_number": 3,
+    "row_name": "Antibiotic",
+    "superscript_number": null,
+    "ph_value": null,
+    "column_name": null,
+    "mark_type": null,
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 4,
+    "row_name": "amikacin",
+    "superscript_number": "1,2,3",
+    "ph_value": "3.5-5.5",
+    "column_name": "Local site pain.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 4,
+    "row_name": "ampicillin",
+    "superscript_number": "4,5,6,7",
+    "ph_value": "8.0-10.0",
+    "column_name": "Phlebitis.Local site pain.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 4,
+    "row_name": "ampicillin and sulbactam",
+    "superscript_number": "8,9",
+    "ph_value": "8.0-10.0",
+    "column_name": "Phlebitis.Local site pain.Rotation of peripheral infusion sites recommended.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 4,
+    "row_name": "azithromycin",
+    "superscript_number": "1,9",
+    "ph_value": "NR*",
+    "column_name": "Potential for damage from extravasation.Local site pain.Redness at injection site.Rotation of peripheral infusion sites recommended.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 4,
+    "row_name": "aztreonam",
+    "superscript_number": "1,10",
+    "ph_value": "4.5-7.5",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Local site pain.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 4,
+    "row_name": "aztreonam and avibactam sodium",
+    "superscript_number": "11",
+    "ph_value": "4.0-8.0",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Potential for damage from extravasation.Local site pain.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 4,
+    "row_name": "capreomycin",
+    "superscript_number": "12,13",
+    "ph_value": "4.5-7.0",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Local site pain.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 4,
+    "row_name": "cefazolin",
+    "superscript_number": "1,14",
+    "ph_value": "4.0-6.0",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Local site pain.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 4,
+    "row_name": "cefepime",
+    "superscript_number": "1,15",
+    "ph_value": "5.2-5.8",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Local site pain.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 4,
+    "row_name": "cefiderocol sulfate tosylate",
+    "superscript_number": "1,16,17",
+    "ph_value": "5.0-7.5",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Potential for damage from extravasation.Local site pain.Redness at injection site.Rotation of peripheral infusion sites recommended.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 4,
+    "row_name": "cefotaxime sodium",
+    "superscript_number": "1,18,19",
+    "ph_value": "4.5-6.5",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Local site pain.Rotation of peripheral infusion sites recommended.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 4,
+    "row_name": "cefotetan disodium",
+    "superscript_number": "1,20",
+    "ph_value": "4.2-7.0",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Local site pain.Rotation of peripheral infusion sites recommended.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 4,
+    "row_name": "cefoxitin",
+    "superscript_number": "1,21",
+    "ph_value": "4.5-6.5",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Local site pain",
+    "mark_type": "Circle.Circle.Circle",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 4,
+    "row_name": "cefoperazone",
+    "superscript_number": "1,22,23",
+    "ph_value": "4.8-6.5",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Local site pain",
+    "mark_type": "Circle.Circle.Circle",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 4,
+    "row_name": "ceftaroline fosamil",
+    "superscript_number": "1,24",
+    "ph_value": "5.0-8.0",
+    "column_name": "Phlebitis.Local site pain.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 4,
+    "row_name": "ceftazidime",
+    "superscript_number": "1,25",
+    "ph_value": null,
+    "column_name": null,
+    "mark_type": null,
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 5,
+    "row_name": "amikacin",
+    "superscript_number": "1,2,3",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Do not physically premix with other drugs; administer separately as recommended by manufacturer. Inactivated in solution with beta-lactam antibiotics (e.g., cephalosporins, penicillins) and vancomycin. Do not mix in the same solution. Appropriate spacing required because of physical incompatibilities.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 5,
+    "row_name": "ampicillin 4,5,6,7",
+    "superscript_number": "4,5,6,7",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Ampicillin solutions should always be administered separately, unless compatibility with other infusion solutions or medicines has been established. Ampicillin solutions should not be mixed with aminoglycosides, metronidazole and injectable tetracycline derivatives such as oxytetracycline, rolitetracycline and doxycycline. Visual signs of incompatibility are precipitation, clouding and discoloration.6",
+    "superscript_in_statement": "6"
+  },
+  {
+    "page_number": 5,
+    "row_name": "ampicillin and sulbactam 8,9",
+    "superscript_number": "8,9",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Frequently used concomitantly with aminoglycosides (e.g., gentamicin), but these drugs must never be mixed in the same infusion (mutual inactivation). If given concurrently, administer at separate sites.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 5,
+    "row_name": "azithromycin 1,9",
+    "superscript_number": "1,9",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Manufacturer states, \"Other IV substances, additives, or medications should not be added to azithromycin, or infused simultaneously through the same IV line.\" Flush IV line with a compatible IV fluid before and after administration. ¹ Local IV site reactions have been reported with the intravenous administration of azithromycin. All volunteers who received infusate concentrations above 2.0 mg/mL experienced local IV site reactions and, therefore, higher concentrations should be avoided. 9",
+    "superscript_in_statement": "1,9"
+  },
+  {
+    "page_number": 5,
+    "row_name": "aztreonam 1,10",
+    "superscript_number": "1,10",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Do not infuse simultaneously with other drugs or solutions except in proven compatibility.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 5,
+    "row_name": "aztreonam and avibactam sodium11",
+    "superscript_number": "11",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Emblaveo is administered by intravenous infusion over 3 hours. This medicinal product must not be mixed with other medicinal products except sodium chloride (0.9%) solution for injection, glucose (5%) solution for injection, or Lactated Ringer's solution as mentioned below.11",
+    "superscript_in_statement": "11"
+  },
+  {
+    "page_number": 5,
+    "row_name": "capreomycin 12,13",
+    "superscript_number": "12,13",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "May be used concomitantly with aminoglycosides (e.g., amikacin, gentamicin), but these drugs must never be mixed in the same infusion (mutual inactivation). If given concurrently, administer separately and flush IV line before and after administration.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 5,
+    "row_name": "cefazolin 1,14",
+    "superscript_number": "1,14",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Temporarily discontinuing other solutions infusing at the same site during intermittent infusion. May be used concomitantly with aminoglycosides (e.g., gentamicin, tobramycin), aminophylline, metronidazole, and vancomycin, but these drugs must never be mixed in the same infusion (mutual inactivation or other potential interactions). If concurrent therapy with cefepime is indicated, each of these antibiotics can be administered separately.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 5,
+    "row_name": "cefepime 1,15",
+    "superscript_number": "1,15",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "May be used concomitantly with aminoglycosides (e.g., amikacin, gentamicin), but these drugs must never be mixed in the same infusion (mutual inactivation). If given concurrently, administer separately and flush the IV line before and after administration.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 5,
+    "row_name": "cefiderocol sulfate tosylate 1,16,17",
+    "superscript_number": "1,16,17",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Solutions of cefotetan must not be admixed with solutions containing aminoglycosides. If Cefotan and aminoglycosides are to administered to the same patient, they must be administered separately and not as a mixed injection.20",
+    "superscript_in_statement": "20"
+  },
+  {
+    "page_number": 5,
+    "row_name": "cefotaxime sodium 1,18,19",
+    "superscript_number": "1,18,19",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "May be used concomitantly with aminoglycosides (e.g., amikacin, gentamicin), but these drugs must never be mixed in the same infusion (mutual inactivation). If given concurrently, administer separately and flush the IV line before and after administration.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 5,
+    "row_name": "cefotetan disodium 1,20",
+    "superscript_number": "1,20",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "May be used concomitantly with aminoglycosides (e.g., amikacin, gentamicin), but these drugs must never be mixed in the same infusion (mutual inactivation). If given concurrently, administer separately and flush the IV line before and after administration.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 5,
+    "row_name": "cefoxitin 1,21",
+    "superscript_number": "1,21",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Solutions of CEFOBID and aminoglycoside should not be directly mixed, since there is a physical incompatibility between them. 22",
+    "superscript_in_statement": "22"
+  },
+  {
+    "page_number": 5,
+    "row_name": "cefoperazone 1,22,23",
+    "superscript_number": "1,22,23",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Manufacturer states, Should not be mixed with or physically added to solutions containing other drugs.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 5,
+    "row_name": "ceftaroline fosamil 1,24",
+    "superscript_number": "1,24",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "May be used concomitantly with aminoglycosides (e.g., amikacin, gentamicin, and tobramycin), but these drugs must never be mixed in the same infusion (mutual inactivation). May exhibit a physical incompatibility with vancomycin depending on concentration. If aminoglycosides or vancomycin are given concurrently, administer separately and flush IV line before and after administration. Manufacturer recommends temporarily discontinuing other solutions infusing at the same site during intermittent infusion and states, \"Do not add supplementary medications to premixed plastic IV containers.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 5,
+    "row_name": "ceftazidime 1,25",
+    "superscript_number": "1,25",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "May be used concomitantly with aminoglycosides (e.g., amikacin, gentamicin), but these drugs must never be mixed in the same infusion (mutual inactivation). If given concurrently, administer separately and flush the IV line before and after administration.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 6,
+    "row_name": "ceftizoxime",
+    "superscript_number": "26,27",
+    "ph_value": null,
+    "column_name": "Phlebitis.Local site pain on Infusion.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 6,
+    "row_name": "ceftobiprole medocaril\nsodium",
+    "superscript_number": "1,28,29",
+    "ph_value": "4.5-5.5",
+    "column_name": "Thrombosis of vessel.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 6,
+    "row_name": "ceftolozane/tazobactam",
+    "superscript_number": "1,30",
+    "ph_value": "5.0-7.0",
+    "column_name": "Phlebitis.Thrombosis of vessel.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 6,
+    "row_name": "ceftriaxone",
+    "superscript_number": "1,31",
+    "ph_value": "6.6-6.7",
+    "column_name": "Phlebitis.Local site pain on Infusion.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 6,
+    "row_name": "cefuroxime",
+    "superscript_number": "1,32",
+    "ph_value": "5.0-8.5",
+    "column_name": "Thrombo-phlebitis.Local site pain on Infusion.Rotation of peripheral infusion sites recommended.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 6,
+    "row_name": "chloramphenicol\nsodium succinate",
+    "superscript_number": "1,33",
+    "ph_value": "6.4-7.0",
+    "column_name": "Local site pain on Infusion.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 6,
+    "row_name": "ciprofloxacin",
+    "superscript_number": "1,34",
+    "ph_value": "3.5-4.6",
+    "column_name": "Thrombo-phlebitis.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 6,
+    "row_name": "clarithromycin",
+    "superscript_number": "35",
+    "ph_value": null,
+    "column_name": "Phlebitis.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 6,
+    "row_name": "clindamycin",
+    "superscript_number": "1,36",
+    "ph_value": "5.5-7.0",
+    "column_name": "Thrombo-phlebitis.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 6,
+    "row_name": "daptomycin",
+    "superscript_number": "1,37,38",
+    "ph_value": "6.8",
+    "column_name": "No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 6,
+    "row_name": "dalbavancin",
+    "superscript_number": "1,39,40",
+    "ph_value": null,
+    "column_name": "Phlebitis.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 6,
+    "row_name": "delafloxacin meglumine",
+    "superscript_number": "1,41",
+    "ph_value": "NR*",
+    "column_name": "Phlebitis.Potential for damage from extravasation.Thrombosis of vessel.Local site pain on Infusion.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Diamond.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 6,
+    "row_name": "doripenem",
+    "superscript_number": "42,43",
+    "ph_value": "4.5-5.5",
+    "column_name": "Phlebitis.Thrombo-phlebitis.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 6,
+    "row_name": "doxycycline hyclate",
+    "superscript_number": "1,44",
+    "ph_value": "1.8-3.3",
+    "column_name": "Thrombo-phlebitis.Potential for damage from extravasation.Absolute vein patency needed",
+    "mark_type": "Circle.Circle.Circle",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 6,
+    "row_name": "eravacycline",
+    "superscript_number": "1,45,46",
+    "ph_value": "5.5-7.0",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Local site pain on Infusion.Redness at injection site.Absolute vein patency needed.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 6,
+    "row_name": "ertapenem",
+    "superscript_number": "1,47",
+    "ph_value": "7.5",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Local site pain on Infusion.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 6,
+    "row_name": "erythromicin lactobionate",
+    "superscript_number": "1,48",
+    "ph_value": "6.5-7.7",
+    "column_name": "Local site pain on Infusion.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Diamond.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "fosfomycin",
+    "superscript_number": "49",
+    "ph_value": null,
+    "column_name": "Phlebitis.Local site pain.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "flucloxacillin",
+    "superscript_number": "50,51",
+    "ph_value": null,
+    "column_name": "Phlebitis.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "gentamicin sulfate",
+    "superscript_number": "1,52",
+    "ph_value": "3.0-5.5",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Local site pain.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "imipenem-cilastatin",
+    "superscript_number": "1,53",
+    "ph_value": "6.5-8.5",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Local site pain.Redness at injection site.Rotation of peripheral infusion sites recommended.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "meropenem and\nvaborbactam",
+    "superscript_number": "1,54,55",
+    "ph_value": null,
+    "column_name": "Phlebitis.Thrombosis of vessel.Local site pain.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "netilmicin",
+    "superscript_number": "55,57",
+    "ph_value": "3.5-6.0",
+    "column_name": "Local site pain.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "ofloxacin",
+    "superscript_number": "58,59,60",
+    "ph_value": "2-9",
+    "column_name": "Phlebitis.Thrombosis of vessel.Local site pain.Redness at injection site",
+    "mark_type": "Circle.Circle.Circle.Circle",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "plazomicin",
+    "superscript_number": "61,62",
+    "ph_value": "6.5",
+    "column_name": "No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "lefamulin",
+    "superscript_number": "1,63",
+    "ph_value": "4.5-5.5",
+    "column_name": "Phlebitis.Local site pain.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "levofloxacin",
+    "superscript_number": "1,64,65",
+    "ph_value": "3.8-5.8",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Thrombosis of vessel.Local site pain.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "lincomycin\nhydrochloride",
+    "superscript_number": "1,66",
+    "ph_value": "3.0-5.5",
+    "column_name": "Local site pain.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "linezolid",
+    "superscript_number": "1,67",
+    "ph_value": "4.8",
+    "column_name": "No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "meropenem",
+    "superscript_number": "1,68",
+    "ph_value": "7.3-8.3",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Potential for damage from extravasation.Thrombosis of vessel.Local site pain.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "metronidazole\nhydrochloride",
+    "superscript_number": "1,69,70",
+    "ph_value": "4.5-7.0",
+    "column_name": "Thrombo-phlebitis.Potential for damage from extravasation.Local site pain.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Diamond.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "minocycline\nhydrochloride",
+    "superscript_number": "1,71",
+    "ph_value": "4.5-5.0",
+    "column_name": "Thrombo-phlebitis.Potential for damage from extravasation.Absolute vein patency needed.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "moxifloxacin hydrochloride",
+    "superscript_number": "1,72",
+    "ph_value": "4.1-4.6",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Potential for damage from extravasation.Local site pain.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 8,
+    "row_name": "nafcillin sodium",
+    "superscript_number": "1,73",
+    "ph_value": "6-8.5",
+    "column_name": "Thrombo-phlebitis.Potential for damage from extravasation.Thrombosis of vessel.Local site pain.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 9,
+    "row_name": "fosfomycin 49",
+    "superscript_number": "49",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "IVOZFO™ (fosfomycin for injection) must be reconstituted and diluted prior to administration. Use Dextrose 5% in Water (D5W) for reconstitution of the powder. It is not\nrecommended to use Sodium Chloride containing solutions for reconstitution of IVOZFO™ due to their additional sodium load (See WARNINGS AND PRECAUTIONS). IVOZFO™™™\n(fosfomycin for injection) is intended for intravenous administration. The duration of infusion should be at least 15 minutes for a 2 gram dose, 30 minutes for a 4 gram dose and 60\nminutes for an 8 gram dose. Isolated reports from the literature indicate that extending the infusion time to up to 4 hours might reduce the risk of hypokalemia. In patients with\nhigh risk of hypokalemia, an extended infusion time (up to 4 hours for the 4g and 8g strengths) might be considered. Fosfomycin solutions should not be mixed together with other\nparenteral preparations. 49",
+    "superscript_in_statement": "49"
+  },
+  {
+    "page_number": 9,
+    "row_name": "flucloxacillin 50,51",
+    "superscript_number": "50,51",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "It is advisable not to combine flucloxacillin with other drugs in solution for parenteral administration. 50",
+    "superscript_in_statement": "50"
+  },
+  {
+    "page_number": 9,
+    "row_name": "gentamicin sulfate 1,52",
+    "superscript_number": "1,52",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Do not physically premix with other drugs. Inactivated in solution with beta-lactam antibiotics and vancomycin. Appropriate spacing required because of incompatibilities.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 9,
+    "row_name": "imipenem-cilastatin 1,53",
+    "superscript_number": "1,53",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Do not mix with or physically add other antibiotics. May be given through y-tube or three-way stopcock of infusion set. Use small needles and large veins, and rotate infusion sites.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 9,
+    "row_name": "meropenem and\nvaborbactam 1,54,55",
+    "superscript_number": "1,54,55",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Only compatible with NS. A single dose as an infusion equally distributed over 3 hours.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 9,
+    "row_name": "netilmicin 55,57",
+    "superscript_number": "55,57",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Ofloxacin solution for infusion should be administered only by slow IV infusion over a period of 30-60 minutes. Fluoroquinolones, including ofloxacin, are associated with an\nincreased risk of tendinitis and tendon rupture in all ages. This risk is further increased in older patients usually over 60 years of age, in patients taking corticosteroid drugs, and in\npatients with kidney, heart or lung transplants. Fluoroquinolones, including ofloxacin, may exacerbate muscle weakness in persons with myasthenia gravis. Avoid ofloxacin in patients\nwith known history of myasthenia gravis. 60",
+    "superscript_in_statement": "60"
+  },
+  {
+    "page_number": 9,
+    "row_name": "ofloxacin 58,59,60",
+    "superscript_number": "58,59,60",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Administer ZEMDRI 15 mg/kg every 24 hours by intravenous (IV) infusion over 30 minutes to patients 18 years of age or older with creatinine clearance greater than or equal to 90\nmL/min. ZEMDRI should not be mixed with other drugs or physically added to solutions containing other drugs. Other medications should not be infused simultaneously with\nZEMDRI through the same IV line.62",
+    "superscript_in_statement": "62"
+  },
+  {
+    "page_number": 9,
+    "row_name": "plazomicin 61,62",
+    "superscript_number": "61,62",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "A single dose as an infusion equally distributed over 60 minutes. Do not exceed the recommended rate of administration; may increase the magnitude of QT prolongation. Do not\nadd other additives to the diluent bag because their compatibilities with lefamulin have not been established.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 9,
+    "row_name": "lefamulin 1,63",
+    "superscript_number": "1,63",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Temporarily discontinue other solutions infusing at the same site and flush tubing with compatible solutions before and after levofloxacin.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 9,
+    "row_name": "levofloxacin 1,64,65",
+    "superscript_number": "1,64,65",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Manufacturer lists as incompatible with kanamycin and novobiocin. Manufacturer lists the following compatibilities. Infuse properly diluted solution at a rate not to exceed 100\nmL/hr (1 Gm/hr).¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 9,
+    "row_name": "lincomycin\nhydrochloride 1,66",
+    "superscript_number": "1,66",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Manufacturer lists as incompatible at the Y-site with amphotericin B (conventional), ceftriaxone (Rocephin), chlorpromazine (Thorazine), diazepam (Valium), erythromycin\n(Erythrocin), pentamidine, phenytoin (Dilantin), and sulfamethoxazole/trimethoprim.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 9,
+    "row_name": "linezolid 1,67",
+    "superscript_number": "1,67",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Meropenem should not be mixed or physically added to solutions containing other drugs; compatibility not established.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 9,
+    "row_name": "meropenem 1,68",
+    "superscript_number": "1,68",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Administer separately, discontinue the primary IV during administration and do not introduce additives into the solution.¹ Local reactions include thrombophlebitis after intravenous\ninfusion. This reaction can be minimized or avoided by avoiding prolonged use of indwelling intravenous catheters. 69 Administer by slow intravenous drip infusion only, either as a\ncontinuous or intermittent infusion. If used with a primary intravenous fluid system, the primary solution should be discontinued during metronidazole infusion.70",
+    "superscript_in_statement": "1,69,70"
+  },
+  {
+    "page_number": 9,
+    "row_name": "metronidazole\nhydrochloride 1,69,70",
+    "superscript_number": "1,69,70",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Additives or other medications should not be added to the minocycline vial or infused simultaneously through the same IV line, including Y-connectors. If the same IV line is used for\nsequential infusion of additional medications, the line should be flushed before and after infusion of minocycline with NS, dextrose, dextrose in saline solutions, or LR.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 9,
+    "row_name": "minocycline\nhydrochloride 1,71",
+    "superscript_number": "1,71",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Manufacturer states, \"Other IV substances, additives, or other medications should not be added to moxifloxacin or infused simultaneously through the same IV line.\" Flush line with a\nsolution compatible to both drugs before and after administration of moxifloxacin and/or any other drug through the same IV line. May be administered through a Y-tube.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 9,
+    "row_name": "moxifloxacin\nhydrochloride 1,72",
+    "superscript_number": "1,72",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "Inactivated in solution with aminoglycosides (e.g., amikacin, gentamicin). Do not mix in the same solution. Appropriate spacing and/or separate sites required. May be infused over\n5 to 10 minutes.¹",
+    "superscript_in_statement": "1"
+  },
+  {
+    "page_number": 9,
+    "row_name": "nafcillin sodium 1,73",
+    "superscript_number": "1,73",
+    "ph_value": null,
+    "column_name": "Additional Consideration",
+    "mark_type": null,
+    "statement": "IVOZFO™ (fosfomycin for injection) must be reconstituted and diluted prior to administration. Use Dextrose 5% in Water (D5W) for reconstitution of the powder. It is not\nrecommended to use Sodium Chloride containing solutions for reconstitution of IVOZFO™ due to their additional sodium load (See WARNINGS AND PRECAUTIONS). IVOZFO™™™\n(fosfomycin for injection) is intended for intravenous administration. The duration of infusion should be at least 15 minutes for a 2 gram dose, 30 minutes for a 4 gram dose and 60\nminutes for an 8 gram dose. Isolated reports from the literature indicate that extending the infusion time to up to 4 hours might reduce the risk of hypokalemia. In patients with\nhigh risk of hypokalemia, an extended infusion time (up to 4 hours for the 4g and 8g strengths) might be considered. Fosfomycin solutions should not be mixed together with other\nparenteral preparations. 49",
+    "superscript_in_statement": "49"
+  },
+  {
+    "page_number": 10,
+    "row_name": "omadacycline",
+    "superscript_number": "1,74",
+    "ph_value": null,
+    "column_name": "Phlebitis.Potential for damage from extravasation.Local site pain on Infusion.Redness at injection site",
+    "mark_type": "Circle.Circle.Circle.Circle",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 10,
+    "row_name": "oritavancin",
+    "superscript_number": "1,75",
+    "ph_value": "3.1-4.3",
+    "column_name": "Phlebitis.Potential for damage from extravasation.Local site pain on Infusion.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 10,
+    "row_name": "oxacillin",
+    "superscript_number": "1,76,77",
+    "ph_value": "6-8.5",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Local site pain on Infusion.Rotation of peripheral infusion sites recommended.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 10,
+    "row_name": "penicillin g aqueous",
+    "superscript_number": "1,78",
+    "ph_value": "5.5-8",
+    "column_name": "Phlebitis.Local site pain on Infusion.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 10,
+    "row_name": "piperacillin-tazobactam",
+    "superscript_number": "1,79,80",
+    "ph_value": "5.5-6.8",
+    "column_name": "Phlebitis.Local site pain on Infusion.Redness at injection site.Rotation of peripheral infusion sites recommended.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 10,
+    "row_name": "rifampim",
+    "superscript_number": "1,81",
+    "ph_value": "7.8-8.8",
+    "column_name": "Phlebitis.Potential for damage from extravasation.Local site pain on Infusion.Redness at injection site.Absolute vein patency needed.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 10,
+    "row_name": "sulfamethoxazole-trimethoprim",
+    "superscript_number": "1,82",
+    "ph_value": "9.5-10.5",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Potential for damage from extravasation.Local site pain on Infusion.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 10,
+    "row_name": "tedizolid",
+    "superscript_number": "1,83",
+    "ph_value": "7.4-8.1",
+    "column_name": "Phlebitis.Local site pain on Infusion.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 10,
+    "row_name": "teicoplanin",
+    "superscript_number": "84,85",
+    "ph_value": "7.2-7.8",
+    "column_name": "Phlebitis.Local site pain on Infusion.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 10,
+    "row_name": "televancin",
+    "superscript_number": "1,86",
+    "ph_value": "4.5-5.0",
+    "column_name": "Phlebitis.Local site pain on Infusion.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 10,
+    "row_name": "ticarcillin & clavulanate",
+    "superscript_number": "87,88",
+    "ph_value": "5.5-7.5",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Local site pain on Infusion.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 10,
+    "row_name": "tigecycline",
+    "superscript_number": "1,89,90",
+    "ph_value": "7.8",
+    "column_name": "Phlebitis.Local site pain on Infusion.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 10,
+    "row_name": "tobramycin",
+    "superscript_number": "1,91,92",
+    "ph_value": "3.0-6.5",
+    "column_name": "Phlebitis.Local site pain on Infusion.Redness at injection site.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 10,
+    "row_name": "vancomycin",
+    "superscript_number": "1,93,94,95",
+    "ph_value": "2.5-5.0",
+    "column_name": "Phlebitis.Thrombo-phlebitis.Thrombosis of vessel.Local site pain on Infusion.Absolute vein patency needed.Rotation of peripheral infusion sites recommended.No simultaneous infusion/ dedicated lumen",
+    "mark_type": "Circle.Diamond.Circle.Circle.Circle.Circle.Diamond",
+    "statement": null,
+    "superscript_in_statement": null
+  },
+  {
+    "page_number": 12,
+    "row_name": "Reference",
+    "superscript_number": null,
+    "ph_value": null,
+    "column_name": null,
+    "mark_type": null,
+    "statement": null,
+    "superscript_in_statement": null
   }
-}
+]

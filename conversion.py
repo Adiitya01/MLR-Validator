@@ -219,32 +219,87 @@ def build_validation_rows_image2(data_rows, references):
     return output
 
 
+def _build_single_row_image1(row, references):
+    """Processes a single row for IMAGE 1 (pH compatibility)."""
+    row_name = str(row.get("row_name") or "").strip()
+    ph_value = row.get("ph_value")
+    ph_value = str(ph_value).strip() if ph_value not in (None, "", "null") else ""
+    
+    column_name_raw = str(row.get("column_name") or "").strip()
+    reference_no = str(row.get("superscript_number") or "").strip()
+    
+    if column_name_raw:
+        columns = [col.strip() for col in column_name_raw.split('.') if col.strip()]
+        columns_formatted = '. '.join(columns)
+    else:
+        columns_formatted = ''
+    
+    if ph_value and columns_formatted:
+        final_statement = f"{row_name}. {ph_value}. {columns_formatted}."
+    elif ph_value:
+        final_statement = f"{row_name}. {ph_value}."
+    elif columns_formatted:
+        final_statement = f"{row_name}. {columns_formatted}."
+    else:
+        final_statement = f"{row_name}."
+    
+    return {
+        "statement": final_statement,
+        "reference_no": reference_no,
+        "reference": references.get(reference_no, ""),
+        "page_no": row.get("page_number", 1)
+    }
+
+def _build_single_row_image2(row, references):
+    """Processes a single row for IMAGE 2 (statement-based) using unified schema."""
+    row_name = str(row.get("row_name") or "").strip()
+    statement_text = str(row.get("statement") or "").strip()
+    column_name = str(row.get("column_name") or "").strip()
+    
+    # Superscript priority: superscript_number (row) OR superscript_in_statement (statement)
+    reference_no = (
+        row.get("superscript_number") 
+        or row.get("superscript_in_statement") 
+        or ""
+    )
+    reference_no = str(reference_no).strip()
+    
+    if statement_text and column_name:
+        final_statement = f"{row_name}. {column_name}. {statement_text}"
+    elif statement_text:
+        final_statement = f"{row_name}. {statement_text}"
+    elif column_name:
+        final_statement = f"{row_name}. {column_name}"
+    else:
+        final_statement = f"{row_name}"
+    
+    return {
+        "statement": final_statement,
+        "reference_no": reference_no,
+        "reference": references.get(reference_no, ""),
+        "page_no": row.get("page_number", 1)
+    }
+
 def build_validation_rows_special_case(data_rows, references):
     """
-    AUTO-ROUTER: Detects table type and routes to appropriate converter.
-    
-    Detection logic:
-    - If rows have 'statement' field → IMAGE 2 (statement-based)
-    - If rows have 'ph_value' field → IMAGE 1 (pH compatibility)
-    - Falls back to IMAGE 1 if uncertain
+    AUTO-ROUTER: Processes each row individually and chooses the appropriate builder.
     """
     if not data_rows:
         return []
     
-    # Sample first row to detect type
-    first_row = data_rows[0]
-    
-    # IMAGE 2 detection: has 'statement' field populated
-    if first_row.get("statement") and str(first_row.get("statement")).strip():
-        return build_validation_rows_image2(data_rows, references)
-    
-    # IMAGE 1 detection: has 'ph_value' or 'mark_type' fields
-    elif first_row.get("ph_value") or first_row.get("mark_type"):
-        return build_validation_rows_image1(data_rows, references)
-    
-    # Default to IMAGE 1
-    else:
-        return build_validation_rows_image1(data_rows, references)
+    output = []
+    for row in data_rows:
+        # Decide based on fields present in this specific row
+        # Priority: Image 2 (statement) because 'column_name' exists in both
+        if row.get("statement") and str(row.get("statement")).strip():
+            output.append(_build_single_row_image2(row, references))
+        elif row.get("ph_value") or row.get("mark_type"):
+            output.append(_build_single_row_image1(row, references))
+        else:
+            # Fallback/Default for rows without specific indicators
+            output.append(_build_single_row_image1(row, references))
+            
+    return output
 
 
 def print_validation_results(validation_rows):

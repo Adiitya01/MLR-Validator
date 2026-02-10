@@ -6,6 +6,11 @@ from typing import List, Optional, Union, Dict
 from pydantic import BaseModel, Field, ValidationError
 from dotenv import load_dotenv
 import fitz  # PyMuPDF
+import logging
+import time
+
+# Get the root logger
+logger = logging.getLogger(__name__)
 
 # Conditional import for Google Gemini
 try:
@@ -24,99 +29,28 @@ from gemini_client import configure_gemini
 client = configure_gemini("parsing")
 
 # --- Drug Superscript Table Extraction ---
-def extract_drug_superscript_table_data(pdf_path: str) -> list:
-
+def clean_json_string(s):
     """
-    Extracts drug superscript and table data for both table types (as described in requirements).
+    Robustly clean LLM output to extract a valid JSON string.
     """
-    with open(pdf_path, "rb") as f:
-        pdf_bytes = f.read()
-        prompt = '''
-You are an expert at extracting and validating drug superscript citations and table data from scientific PDFs.
-For each table in the PDF, do the following: 
---- For tables like IMAGE 1 ---
-1. For every row, check if the row name (first column) contains a superscript citation (e.g., ¹, ², ³–⁵).
-2. If a superscript is present in the row name, extract the row name and the superscript number(s).
-3. For that row, check each cell for a circle (●) or diamond (◆) mark.
-4. Collect all columns in that row that have a circle or diamond mark.
-5. Also extract the pH value from the relevant column in that row. If the cloumn has no pH value, set it to null.
-6. Output a single JSON object per row:
-    {
-      "page_number": <integer>,
-      "row_name": "<string>",
-      "superscript_number": "<string>",
-      "ph_value": "<string>",
-      "column_name": "<column1>.<column2>.<column3>",
-      "mark_type": "<type1>.<type2>.<type3>"
-    }
---- For tables like IMAGE 2 ---
-1. For every row, extract:
-    - The row name (first column)
-    - The statement (second column)
-    - The column name (header)
-2. Detect and extract any superscript citations in both the row name and the statement.
-3. Output a JSON object for each row:
-    {
-      "page_number": <integer>,
-      "row_name": "<string>",
-      "row_superscript": "<string or null>",
-      "statement": "<string>",
-      "statement_superscript": "<string or null>",
-      "column_name": "<string>"
-    }
---- GENERAL RULES ---
-- Return a JSON array of all findings.
-- If no superscripts or marks are found, return an empty array [].
-- Do not include markdown or explanations, only the JSON array.
-'''
-    models_to_try = ["gemini-1.5-flash-latest", "gemini-2.0-flash", "gemini-1.5-pro"]
-    response = None
-    last_error = None
-
-    for model_id in models_to_try:
-        try:
-            # Detect if we're using the new Client or the legacy genai
-            if hasattr(client, "models"):
-                # New API (google-genai)
-                response = client.models.generate_content(
-                    model=model_id,
-                    contents=[
-                        types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
-                        prompt
-                    ],
-                    config=types.GenerateContentConfig(temperature=0.0)
-                )
-            else:
-                # Legacy API (google-generativeai)
-                model = client.GenerativeModel(model_name=model_id)
-                response = model.generate_content([
-                    {"mime_type": "application/pdf", "data": pdf_bytes},
-                    prompt
-                ])
-            
-            if response:
-                break
-        except Exception as e:
-            last_error = e
-            continue
+    if not s: return "[]"
     
-    if not response:
-        raise RuntimeError(f"All models failed for extraction: {str(last_error)}")
-
-    resp = response.text.strip()
-    # Clean up Markdown code blocks if present
-    if resp.startswith("```"):
-        m = re.search(r"```(?:[^\n]*\n)?(.*)```$", resp, re.S)
+    # Clean markdown and whitespace
+    s = s.strip()
+    if s.startswith("```"):
+        m = re.search(r"```(?:json)?\n?(.*?)```", s, re.DOTALL)
         if m:
-            resp = m.group(1).strip()
+            s = m.group(1).strip()
         else:
-            resp = resp.strip('`').strip()
-
-    try:
-        data = json.loads(resp)
-        return data
-    except Exception as e:
-        raise ValueError(f"Failed to parse Gemini response: {e}\nRaw response: {resp}")
+            s = s.strip('`').strip()
+    
+    # Basic structural repair if needed
+    if s.count('{') > s.count('}'):
+        s += '}' * (s.count('{') - s.count('}'))
+    if s.count('[') > s.count(']'):
+        s += ']' * (s.count('[') - s.count(']'))
+    
+    return s
 
 # --- Pydantic Models ---
 
@@ -190,21 +124,151 @@ def extract_references_from_text(text: str) -> Dict[str, str]:
 
     return references
 
-# --- Main Extraction Function ---
+# --- Drug Superscript Table Extraction ---
+
+def extract_drug_superscript_table_data(pdf_path: str) -> list:
+    """
+    Extracts drug superscript and table data for both table types (as described in requirements).
+    Processed PAGE-BY-PAGE to avoid output token limits.
+    """
+    import time
+    all_extracted_data = []
+
+    # Open valid PDF
+    try:
+        doc = fitz.open(pdf_path)
+    except Exception as e:
+        raise ValueError(f"Could not open PDF: {e}")
+
+    total_pages = len(doc)
+    logger.info(f"[INFO] Processing {total_pages} pages individually to avoid token limits...")
+
+    prompt = '''
+You are a VISION-BASED data extractor for pharmaceutical tables.
+This is ONE PAGE from a PDF. Extract every row from the table on this page into a JSON array.
+
+--- TABLE TYPE DETECTION ---
+1. **GRID TABLES**: Have many small columns for things like "Phlebitis", "Local site pain", "Redness", etc. with symbols (●, ◆).
+2. **STATEMENT TABLES**: Have fewer, wider columns, typically "Generic Drug name", "Brand Name", and "Additional Consideration".
+
+--- EXTRACTION RULES ---
+- **row_name**: Exact text from the first column (e.g., "amikacin", "cefepime").
+- **superscript_number**: Extract any numbers found in the drug name (e.g., "1,2,3").
+- **ph_value**: Text from the "pH" column if present.
+- **column_name**: 
+    - For GRID tables: Dot-separated list of column headers where a symbol (●, ◆) is present in that row.
+    - For STATEMENT tables: The header of the column containing the detailed text (usually "Additional Consideration").
+- **mark_type**: For GRID tables, dot-separated list of shape types found ("Circle" or "Diamond"). Null for statement tables.
+- **statement**: 
+    - For STATEMENT tables: Extract the FULL text from the "Additional Consideration" column.
+    - For GRID tables: Use null.
+- **superscript_in_statement**: Extract any numbers found inside or at the end of the "statement" text.
+
+--- OUTPUT FORMAT (STRICT JSON ARRAY) ---
+[
+  {
+    "page_number": <integer from footer>,
+    "row_name": "drug name",
+    "superscript_number": "1,2",
+    "ph_value": "4.5-5.5",
+    "column_name": "Phlebitis.Local site pain",
+    "mark_type": "Circle.Circle",
+    "statement": "The full text from 'Additional Consideration' column or null",
+    "superscript_in_statement": "number or null"
+  }
+]
+'''
+    # Reduced model list for speed, prioritizing flash for simple extraction
+    models_to_try = ["gemini-2.0-flash"]
+    
+    for page_idx in range(total_pages):
+        # Create single page PDF in memory
+        new_doc = fitz.open()
+        new_doc.insert_pdf(doc, from_page=page_idx, to_page=page_idx)
+        pdf_bytes = new_doc.tobytes()
+        new_doc.close()
+        
+        real_page_num = page_idx + 1
+        print(f"   [PAGE {real_page_num}/{total_pages}] Extracting...", end="\r")
+
+        response = None
+        last_error = None
+        
+        # Retry with different models if one fails
+        for model_id in models_to_try:
+            try:
+                # Detect API version
+                if hasattr(client, "models"):
+                    # New API
+                    response = client.models.generate_content(
+                        model=model_id,
+                        contents=[
+                            types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
+                            prompt
+                        ],
+                        config=types.GenerateContentConfig(
+                            temperature=0.0,
+                            response_mime_type="application/json",
+                            max_output_tokens=8192
+                        )
+                    )
+                else:
+                    # Legacy API
+                    model = client.GenerativeModel(model_name=model_id)
+                    response = model.generate_content([
+                        {"mime_type": "application/pdf", "data": pdf_bytes},
+                        prompt
+                    ],
+                    generation_config={"temperature": 0.0, "response_mime_type": "application/json", "max_output_tokens": 8192}
+                    )
+                
+                if response:
+                    break
+                    
+            except Exception as e:
+                # Simple rate limit handling
+                if "429" in str(e):
+                    time.sleep(2)
+                last_error = e
+                continue
+        
+        if not response:
+             logger.error(f"[EXTRACTION] Failed to extract page {real_page_num}: {last_error}")
+             continue
+
+        # Parse Response
+        try:
+            resp = clean_json_string(response.text)
+            page_data = json.loads(resp)
+            if isinstance(page_data, list):
+                # Ensure page number is correct
+                for item in page_data:
+                    # Override/Verify page number 
+                    item["page_number"] = real_page_num
+                
+                all_extracted_data.extend(page_data)
+            
+        except Exception as e:
+             # Just log error and continue to next page
+             logger.error(f"[EXTRACTION] JSON Parsing failed for page {real_page_num}: {e}")
+             continue
+
+    logger.info(f"[EXTRACTION] complete. Total records: {len(all_extracted_data)}")
+    
+    # AUTO-SAVE RAW JSON for debugging
+    dump_path = save_json(all_extracted_data, folder="output", filename="raw_extraction_dump.json")
+    logger.info(f"[EXTRACTION] Raw dump saved to: {dump_path}")
+    
+    return all_extracted_data
 
 def extract_footnotes(pdf_path: str) -> DocumentExtraction:
     with open(pdf_path, "rb") as f:
         pdf_bytes = f.read()
     
-    # Validate PDF is not empty
     if not pdf_bytes:
-        raise ValueError(f"PDF file at {pdf_path} is empty. Cannot process.")
-    
-    # Validate PDF has content (check for PDF header)
-    if not pdf_bytes.startswith(b'%PDF'):
-        raise ValueError(f"File at {pdf_path} is not a valid PDF file.")
+        raise ValueError("PDF is empty")
 
-    prompt = '''You are a specialized Vision Extractor for scientific PDF pages. Your goal is to extract ALL statements that have superscript citations, AND all data from tables.
+    prompt = '''You are a specialized Vision Extractor for scientific PDF pages. Your goal is to extract EVERYTHING. You must be extremely granular and extract on a "Statement-By-Statement" basis so no superscript is missed.
 
     Output a SINGLE JSON array. Each element must follow this schema:
     {
@@ -214,76 +278,45 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
         "statement": "<string>"
     }
 
+    ### CRITICAL RULES:
+    1. **NO SKIPPING (ZERO-LOSS POLICY)**: You are not allowed to summarize. If a heading has a paragraph under it, you must extract EVERY statement in that paragraph if it relates to a superscript. 
+    2. **STATEMENT-BY-STATEMENT**: If one paragraph has 3 different superscripts (e.g., 1, 2, and 3), you must create 3 SEPARATE JSON objects. 
+    3. **CAPTURE THE "WHY"**: Do not just extract the heading. Extract the explanation, the statistics (like 63.4%, 2.3 million cases, 42.9%), and the full descriptive text associated with the superscript.
+    4. **NUMERICAL PRECISION & MAPPING**: Ensure all percentages and case numbers are captured exactly. You MUST be 100% accurate with the superscript number. 
+
     ### STEP 1: FIND ALL SUPERSCRIPT CITATIONS
-    Scan the ENTIRE page for superscript numbers (¹, ², ³, ⁴, ⁵, ⁶, ⁷, ⁸, ⁹, ¹⁰, ¹¹, ¹², ¹³, ¹⁴, ¹⁵, ¹⁶, ¹⁷, ¹⁸, ¹⁹, ²⁰, etc.)
+    Scan the document for superscript numbers (¹, ², ³, ⁴, ⁵, ⁶, ⁷, ⁸, ⁹, ¹⁰, ¹¹, ¹², ¹³, ¹⁴, ¹⁵, ¹⁶, ¹⁷, ¹⁸, ¹⁹, ²⁰, etc.)
     
-    For EACH superscript found:
-    - Extract the number as "superscript_number"
-    - Extract the text/sentence it is attached to as "statement"
-    - Extract the nearest heading/section title as "heading"
-    
-    This includes superscripts on:
-    - Headings and titles
-    - Sentences and paragraphs
-    - Bullet points
-    - Image captions
-    - Table cells
-
-    ### STEP 2: EXTRACT ALL TABLE DATA
-    For any comparison tables or data grids:
-    
-    1. **IDENTIFY HEADERS** - Note the labels for Rows (left column) and Columns (top row).
-    
-    2. **FOR EACH DATA CELL:**
-       - **Find the Citation**: Search for a superscript number in this order:
-         a) Inside the cell itself.
-         b) In the Row Header (the category on the left).
-         c) In the Column Header (the title at the top).
-       - **Assign Citation**: 
-         - If a number is found in any of those 3 places, set "superscript_number" to that number.
-         - ONLY if no number exists in the cell, row, or column, set "superscript_number" to "Table".
-       - **Set Details**:
-         - Set "heading" to the Row Category.
-         - Set "statement" using format: "Row: [Row Name] | Column: [Column Name] | Content: [Cell Text]"
-
-    *Example (Cell gets citation from Row Header):*
-    If Row Header is "Cost ⁵" and cell is "High", extraction is:
-    {
-        "page_number": 2,
-        "superscript_number": "5",
-        "heading": "Cost",
-        "statement": "Row: Cost | Column: Large Volume Paracentesis | Content: High"
-    }
-
-    ### GENERAL RULES:
-    - BE AGGRESSIVE: Do not use "Table" if a number exists in the row or column header.
-    - Extract EVERY statement with a superscript citation.
-    - Return ONLY the JSON array. No markdown, no explanations.
+    For EACH individual superscript found:
+    - **superscript_number**: The exact number or range.
+    - **statement**: Extract the FULL descriptive text.
+    - **heading**: The nearest clear Section Header.
+    - **page_number**: The page number it appears on.
     '''
 
-    models_to_try = ["gemini-1.5-flash-latest", "gemini-2.0-flash", "gemini-1.5-pro"]
+    models_to_try = ["gemini-2.0-flash"]
     response = None
     last_error = None
 
     for model_id in models_to_try:
         try:
             if hasattr(client, "models"):
-                # New API (google-genai)
                 response = client.models.generate_content(
                     model=model_id,
                     contents=[
                         types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
                         prompt
                     ],
-                    config=types.GenerateContentConfig(temperature=0.0)
+                    config=types.GenerateContentConfig(temperature=0.0, response_mime_type="application/json", max_output_tokens=8192)
                 )
             else:
-                # Legacy API (google-generativeai)
                 model = client.GenerativeModel(model_name=model_id)
                 response = model.generate_content([
                     {"mime_type": "application/pdf", "data": pdf_bytes},
                     prompt
-                ])
+                ],
+                generation_config={"temperature": 0.0, "response_mime_type": "application/json", "max_output_tokens": 8192}
+                )
             if response:
                 break
         except Exception as e:
@@ -291,70 +324,37 @@ def extract_footnotes(pdf_path: str) -> DocumentExtraction:
             continue
     
     if not response:
-        raise RuntimeError(f"All models failed for extraction: {str(last_error)}")
+        raise RuntimeError(f"Extraction failed: {last_error}")
 
-    resp = response.text.strip()
-    # Clean up Markdown code blocks if present
-    if resp.startswith("```"):
-        m = re.search(r"```(?:[^\n]*\n)?(.*)```$", resp, re.S)
-        if m:
-            resp = m.group(1).strip()
-        else:
-            resp = resp.strip('`').strip()
+    resp_text = clean_json_string(response.text)
+    
+    # Extract references separately
+    full_text = extract_text_from_pdf(pdf_path)
+    references = extract_references_from_text(full_text)
 
     try:
-        data = json.loads(resp)
-
-        # Extract references from PDF text once
-        pdf_text = extract_text_from_pdf(pdf_path)
-        references = extract_references_from_text(pdf_text)
-
-        # Handle new structure: {title, statements[]}
-        if isinstance(data, dict) and "statements" in data:
-            in_text_items = []
-            title = data.get("title", None)
-            
-            for idx, item in enumerate(data.get("statements", [])):
-                try:
-                    in_text_items.append(InlineCitation(**item))
-                except ValidationError as ve:
-                    continue
-            
-            return DocumentExtraction(
-                title=title, 
-                author=None, 
-                footnotes=[], 
-                in_text=in_text_items,
-                references=references
-            )
-
-        # Handle List output (Legacy format from old prompt)
-        if isinstance(data, list):
-            in_text_items = []
-            for idx, item in enumerate(data):
-                try:
-                    in_text_items.append(InlineCitation(**item))
-                except ValidationError as ve:
-                    continue
-            
-            return DocumentExtraction(
-                title=None, 
-                author=None, 
-                footnotes=[], 
-                in_text=in_text_items,
-                references=references
-            )
-
-        # Handle Dict output (Edge case)
-        if isinstance(data, dict):
-            extraction = DocumentExtraction(**data)
-            extraction.references = references
-            return extraction
-
-        raise ValueError("Unexpected JSON structure")
-
+        data = json.loads(resp_text)
+        
+        in_text_items = []
+        # Handle list vs dict with statements key
+        items = data if isinstance(data, list) else data.get("statements", [])
+        
+        for item in items:
+            try:
+                in_text_items.append(InlineCitation(**item))
+            except:
+                continue
+                
+        return DocumentExtraction(
+            title=None,
+            author=None,
+            footnotes=[],
+            in_text=in_text_items,
+            references=references
+        )
     except Exception as e:
-        raise
+        logger.error(f"Failed to parse JSON: {str(e)}")
+        raise e
 
 def save_json(data, folder="output", filename="result.json"):
     """
