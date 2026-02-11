@@ -155,14 +155,14 @@ Thoroughly analyze the provided document to determine if this specific claim is 
     "validation_result": "Supported" or "Contradicted" or "Not Found",
     "matched_evidence": "Exact quotes from paper (max 5 sentences, separated by | if multiple)",
     "page_location": "Context describing where in paper evidence appears",
-    "confidence_score": confidence_score_here,
+    "confidence_score": 0.9,
     "analysis_summary": "Extremely detailed explanation of why this verdict was reached."
-}
-(where confidence_score_here is a float between 0.0 and 1.0 reflecting your actual certainty)}
+}}
 
 CRITICAL RULES:
 - Return ONLY valid JSON.
 - matched_evidence MUST be verbatim text from the document.
+- confidence_score MUST be a float between 0.0 and 1.0 reflecting your actual certainty (do not just use 0.9).
 - analysis_summary should be helpful for a human reviewer.
 """
 

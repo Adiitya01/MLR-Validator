@@ -358,14 +358,14 @@ RULES:
     "validation_result": "Supported" or "Contradicted" or "Not Found",
     "matched_evidence": "Exact quotes from the document",
     "page_location": "Page or section where found",
-    "confidence_score": 0.0 to 1.0 (reflecting your actual certainty),
+    "confidence_score": 0.8,
     "analysis_summary": "Brief explanation"
 }}
 
 CRITICAL RULES:
 - validation_result MUST be one of: "Supported", "Contradicted", "Not Found"
 - matched_evidence MUST contain ONLY verbatim text from the document
-- confidence_score must be between 0.0 and 1.0
+- confidence_score MUST be a float between 0.0 and 1.0 reflecting your actual certainty (do not just use 0.8)
 - Return ONLY valid JSON - nothing else"""
 
         try:
@@ -475,14 +475,14 @@ Respond ONLY with valid JSON (no markdown, no code blocks, no explanation outsid
     "validation_result": "Supported" or "Contradicted" or "Not Found",
     "matched_evidence": "Direct quotes from paper (max 5 sentences, separated by | if multiple)",
     "page_location": "Context describing where in paper evidence appears",
-    "confidence_score": 0.0 to 1.0 (reflecting your actual certainty),
+    "confidence_score": 0.9,
     "analysis_summary": "Brief explanation of how paper supports/contradicts/ignores the statement"
 }}
 
 CRITICAL RULES:
 - validation_result MUST be one of: "Supported", "Contradicted", "Not Found"
 - matched_evidence MUST contain ONLY text copied directly from the paper - no paraphrasing
-- confidence_score should be 0.0-1.0 (higher = clearer evidence)
+- confidence_score MUST be a float between 0.0 and 1.0 reflecting your actual certainty (do not just use 0.9)
 - Return ONLY the JSON object, nothing else
 - If evidence is found but relates to broader context, still mark as "Supported" or "Contradicted"
 - If statement mentions specific numbers/percentages, finding similar claims counts as support"""
