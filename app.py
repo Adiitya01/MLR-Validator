@@ -148,10 +148,83 @@ logger.info("Logging initialized and working!")
 # ==== IMPORT YOUR PIPELINE FILES ====
 from Superscript import extract_footnotes, extract_drug_superscript_table_data
 from conversion import build_validation_dataframe, build_validation_rows_special_case
-from Gemini_version import StatementValidator
+from Gemini_version import StatementValidator, GeminiClient
 from validation_api import drug_router, research_router
+from Manual_Review import validate_manual_review, validate_manual_review_multi
 
 app = FastAPI(title="MLR validation tool")
+
+# ============================================================================
+# MANUAL REVIEW ENDPOINT
+# ============================================================================
+@app.post("/manual-review")
+async def manual_review_endpoint(
+    statement: str = Form(...),
+    reference_pdfs: List[UploadFile] = File(...),
+    reference_no: str = Form(None)
+):
+    """
+    Standalone validation for a single statement against one or more PDFs.
+    This is triggered from the 'Manual Review' sidebar button.
+    """
+    logger.info(f"[MANUAL REVIEW] Received request for statement: {statement[:50]}...")
+    logger.info(f"[MANUAL REVIEW] Number of PDFs: {len(reference_pdfs)}")
+    
+    tmp_paths = []
+    try:
+        # Initialize Gemini Client
+        client = GeminiClient()
+        if not client.client:
+            raise HTTPException(status_code=500, detail="Gemini client failed to initialize")
+        
+        gemini_files = []
+        ref_labels = []
+        
+        for idx, pdf in enumerate(reference_pdfs):
+            # 1. Read PDF content
+            content = await pdf.read()
+            
+            # 2. Save to temp (for cleanup)
+            suffix = os.path.splitext(pdf.filename)[1]
+            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+                tmp.write(content)
+                tmp_paths.append(tmp.name)
+            
+            # 3. Upload to Gemini
+            logger.info(f"[MANUAL REVIEW] Uploading {pdf.filename} to Gemini...")
+            gemini_file = client.upload_pdf_to_gemini(content, pdf.filename)
+            gemini_files.append(gemini_file)
+            
+            # 4. Build reference label
+            if reference_no and len(reference_pdfs) == 1:
+                ref_labels.append(reference_no)
+            else:
+                ref_labels.append(pdf.filename)
+        
+        # 5. Call appropriate validation logic
+        if len(gemini_files) == 1:
+            result = validate_manual_review(statement, gemini_files[0], ref_labels[0])
+        else:
+            result = validate_manual_review_multi(statement, gemini_files, ref_labels)
+        
+        return {
+            "status": "success",
+            "result": result
+        }
+        
+    except Exception as e:
+        logger.error(f"[MANUAL REVIEW] Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+        
+    finally:
+        # Cleanup all temp files
+        for tmp_path in tmp_paths:
+            if os.path.exists(tmp_path):
+                try:
+                    os.remove(tmp_path)
+                except:
+                    pass
+
 
 # CORS Middleware - Permissive configuration for POC
 app.add_middleware(

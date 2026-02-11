@@ -10,26 +10,35 @@ import ErrorBoundary from './components/ErrorBoundary'
 import { apiClient } from './api'
 
 function App() {
-  const [specialSidebarCollapsed, setSpecialSidebarCollapsed] = useState(true)
-  const [brochureFile, setBrochureFile] = useState(null)
-  const [backendStatus, setBackendStatus] = useState('checking') // 'checking', 'connected', 'error'
-  const [referenceFiles, setReferenceFiles] = useState([])
-  const [extractedStatements, setExtractedStatements] = useState([])
-  const [validationResults, setValidationResults] = useState([])
-  const [isValidating, isValidatingSet] = useState(false)
-  const [resultFilter, setResultFilter] = useState([])
-  const [minConfidence, setMinConfidence] = useState(0)
-  const [expandedResult, setExpandedResult] = useState(null)
-  const [extractionStatus, setExtractionStatus] = useState('ready') // 'ready', 'extracting', 'success', 'error'
-  const [liveLog, setLiveLog] = useState('')
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [showHistoryModal, setShowHistoryModal] = useState(false)
+  const [currentView, setCurrentView] = useState('dashboard') // 'dashboard' or 'manual-review'
+  const [manualReviewStatement, setManualReviewStatement] = useState('')
+  const [manualReviewReferenceNo, setManualReviewReferenceNo] = useState('')
+  const [manualReviewFiles, setManualReviewFiles] = useState([])
+  const [manualReviewResult, setManualReviewResult] = useState(null)
+  const [isManualReviewLoading, setIsManualReviewLoading] = useState(false)
   const [userData, setUserData] = useState(null)
   const [isLoadingAuth, setIsLoadingAuth] = useState(true)
   const [drugPipelineNotification, setDrugPipelineNotification] = useState(false)
   const [validationType, setValidationType] = useState('research') // 'research' or 'drug'
+
+  const [brochureFile, setBrochureFile] = useState(null)
+  const [referenceFiles, setReferenceFiles] = useState([])
+  const [extractedStatements, setExtractedStatements] = useState([])
+  const [validationResults, setValidationResults] = useState([])
+  const [resultFilter, setResultFilter] = useState([])
+  const [minConfidence, setMinConfidence] = useState(0)
+  const [extractionStatus, setExtractionStatus] = useState('ready')
+  const [isValidating, isValidatingSet] = useState(false)
+  const [liveLog, setLiveLog] = useState('')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [specialSidebarCollapsed, setSpecialSidebarCollapsed] = useState(true)
+  const [expandedResult, setExpandedResult] = useState(null)
+  const [backendStatus, setBackendStatus] = useState('checking')
+
   const brochureInputRef = useRef(null)
   const referenceInputRef = useRef(null)
+  const manualReviewInputRef = useRef(null)
 
   // Load user data
   useEffect(() => {
@@ -76,6 +85,7 @@ function App() {
     const interval = setInterval(async () => {
       try {
         const res = await fetch(`${apiClient.baseUrl}/logs/latest`)
+        if (res.status === 404) return // Silent stop if logs endpoint is gone
         const data = await res.json()
 
         const validatingLogs = data.logs
@@ -90,16 +100,15 @@ function App() {
           }
         }
       } catch (e) {
-        // silent fail — logger should never break UI
+        // silent fail
       }
-    }, 300)
+    }, 1500) // Increased to 1.5s to reduce overhead
 
     return () => clearInterval(interval)
   }, [isValidating])
 
   const handleSelectFromHistory = (brochure, results) => {
     // Load previous validation results from MongoDB
-    // results is already the array of validation results from brochure.results
     console.log('Loading from history:', { brochure, results })
 
     const normalizedResults = (results || []).map(r => {
@@ -214,7 +223,11 @@ function App() {
           }
         } catch (err) {
           console.error('Polling error:', err)
-          // Don't stop on single network error, just keep trying until maxRetries
+          if (err.message.includes('404')) {
+            setLiveLog('Error: Validation session lost. Please try again.')
+            setExtractionStatus('error')
+            jobFinished = true // Stop polling
+          }
         }
 
         retryCount++
@@ -237,6 +250,42 @@ function App() {
       setLiveLog(`Error: ${error.message}`)
     } finally {
       isValidatingSet(false)
+    }
+  }
+
+  const handleManualReview = async () => {
+    if (!manualReviewStatement || manualReviewFiles.length === 0) {
+      alert('Please provide both a statement and at least one reference PDF')
+      return
+    }
+
+    setIsManualReviewLoading(true)
+    setManualReviewResult(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('statement', manualReviewStatement)
+      manualReviewFiles.forEach(f => {
+        formData.append('reference_pdfs', f)
+      })
+      formData.append('reference_no', manualReviewReferenceNo)
+
+      const response = await fetch(`${apiClient.baseUrl}/manual-review`, {
+        method: 'POST',
+        body: formData
+      })
+
+      const data = await response.json()
+      if (data.status === 'success') {
+        setManualReviewResult(data.result)
+      } else {
+        alert('Manual review failed: ' + (data.detail || 'Unknown error'))
+      }
+    } catch (err) {
+      console.error('Manual review error:', err)
+      alert('Error connecting to manual review service')
+    } finally {
+      setIsManualReviewLoading(false)
     }
   }
 
@@ -330,9 +379,22 @@ function App() {
                 <span className="menu-icon">📋</span>
                 <span>View History</span>
               </button>
-              <button className="menu-item">
-                <span className="menu-icon">⚙️</span>
-                <span>Settings</span>
+              <button
+                onClick={() => {
+                  setCurrentView(currentView === 'manual-review' ? 'dashboard' : 'manual-review')
+                  setManualReviewResult(null)
+                  setManualReviewStatement('')
+                  setManualReviewFiles([])
+                  setManualReviewReferenceNo('')
+                }}
+                className={`menu-item ${currentView === 'manual-review' ? 'active' : ''}`}
+                style={{
+                  backgroundColor: currentView === 'manual-review' ? '#eff6ff' : 'transparent',
+                  color: currentView === 'manual-review' ? '#2563eb' : '#4b5563'
+                }}
+              >
+                <span className="menu-icon">🔍</span>
+                <span>{currentView === 'manual-review' ? 'Back to Pipeline' : 'Manual Review'}</span>
               </button>
               <button
                 onClick={handleLogout}
@@ -353,17 +415,14 @@ function App() {
           )}
         </aside>
 
-        {/* Persistent Right Sidebar for Special Use Cases - INDEPENDENT OF LEFT SIDEBAR */}
+        {/* Persistent Right Sidebar for Special Use Cases */}
         <SpecialUseCasesSidebar
           collapsed={specialSidebarCollapsed}
           onClose={() => setSpecialSidebarCollapsed(!specialSidebarCollapsed)}
           onDrugsClick={() => {
-            // Toggle drug pipeline mode
             const newType = validationType === 'drug' ? 'research' : 'drug'
             setValidationType(newType)
-            // Show notification
             setDrugPipelineNotification(true)
-            // Auto-hide after 3 seconds
             setTimeout(() => setDrugPipelineNotification(false), 3000)
           }}
         />
@@ -390,23 +449,15 @@ function App() {
             <span>{validationType === 'drug' ? 'Using' : 'Switched to'} <strong>{validationType === 'drug' ? 'ANTIBIOTICS' : validationType.toUpperCase()} PIPELINE</strong></span>
             <button
               onClick={() => setDrugPipelineNotification(false)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'white',
-                cursor: 'pointer',
-                fontSize: '18px',
-                marginLeft: '12px'
-              }}
+              style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '18px', marginLeft: '12px' }}
             >
               ✕
             </button>
           </div>
         )}
 
-        <header className="header" style={{ position: 'relative' }}>
+        <header className="header">
           <div className="header-content">
-
             <div className="header-title-section">
               <h1>MLR Validation Tool</h1>
               <p className="header-subtitle">Professional Citation and Claims Validator</p>
@@ -418,372 +469,258 @@ function App() {
         </header>
 
         <main className="main-content">
-          {/* Loading State */}
-          {isLoadingAuth && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: '100vh',
-              background: '#f3f4f6',
-              fontSize: '18px',
-              color: '#6b7280'
-            }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: '40px',
-                  height: '40px',
-                  border: '3px solid #e5e7eb',
-                  borderTopColor: '#667eea',
-                  borderRadius: '50%',
-                  margin: '0 auto 20px',
-                  animation: 'spin 0.8s linear infinite'
-                }}></div>
-                Loading...
+          {currentView === 'manual-review' ? (
+            <div className="manual-review-screen" style={{ padding: '40px', maxWidth: '95%', margin: '0 auto', animation: 'fadeIn 0.3s ease-out' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', borderBottom: '2px solid #e5e7eb', paddingBottom: '20px' }}>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '32px', color: '#111827', fontWeight: '800' }}>Manual Statement Review</h2>
+                  <p style={{ margin: '8px 0 0 0', color: '#6b7280', fontSize: '16px' }}>Verify individual claims against specific scientific documents using Gemini AI</p>
+                </div>
+                <button onClick={() => setCurrentView('dashboard')} style={{ padding: '10px 20px', backgroundColor: 'white', border: '1px solid #d1d5db', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}>
+                  ← Back to Dashboard
+                </button>
               </div>
-            </div>
-          )}
 
-          {!isLoadingAuth && (
-            <>
-              <div className="content-container">
-                <div className="upload-section">
-                  <div className="upload-column">
-                    <div className="column-header">
-                      <span>Upload Collateral</span>
-                    </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+                <div style={{ backgroundColor: 'white', padding: '32px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', border: '1px solid #f3f4f6' }}>
 
-                    <div className="upload-area" onClick={() => brochureInputRef.current?.click()}>
-                      <label className="file-input-label">
-                        <input
-                          ref={brochureInputRef}
-                          type="file"
-                          accept=".pdf"
-                          onChange={handleBrochureUpload}
-                          className="file-input"
-                        />
-                        {brochureFile ? (
-                          <div className="upload-content">
-                            <p className="upload-instruction">{brochureFile.name}</p>
-                          </div>
-                        ) : (
-                          <div className="upload-content">
-                            <p className="upload-instruction">Select your PDF file</p>
-                            <span className="upload-hint">or drag and drop</span>
-                            <span className="file-size-hint">Up to 25 MB</span>
-                          </div>
-                        )}
-                      </label>
-                      <button className="browse-btn" disabled={!!brochureFile} onClick={(e) => { e.stopPropagation(); brochureInputRef.current?.click() }}>Browse Files</button>
-                    </div>
+                  {/* Row 1: Reference No */}
+                  <div style={{ marginBottom: '24px' }}>
+                    <label style={{ display: 'block', marginBottom: '10px', fontWeight: '700', color: '#374151', fontSize: '15px' }}>Reference No (Optional)</label>
+                    <input
+                      type="text"
+                      value={manualReviewReferenceNo}
+                      onChange={(e) => setManualReviewReferenceNo(e.target.value)}
+                      placeholder="e.g. Ref 1, Footnote 5..."
+                      style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #d1d5db', fontSize: '15px', outline: 'none' }}
+                    />
                   </div>
 
-                  <div className="upload-column">
-                    <div className="column-header">
-                      <span>Upload Supporting References</span>
+                  {/* Row 2: Statement and File Upload Side-by-Side */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginBottom: '32px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <label style={{ display: 'block', marginBottom: '12px', fontWeight: '700', color: '#374151', fontSize: '16px' }}>Statement to Validate</label>
+                      <textarea
+                        value={manualReviewStatement}
+                        onChange={(e) => setManualReviewStatement(e.target.value)}
+                        placeholder="Paste the claim..."
+                        style={{ flex: 1, width: '100%', padding: '20px', borderRadius: '12px', border: '1px solid #d1d5db', fontSize: '16px', lineHeight: '1.6', fontFamily: 'inherit', resize: 'none', transition: 'border-color 0.2s', outline: 'none', minHeight: '300px' }}
+                      />
                     </div>
-
-                    <div className="upload-area" onClick={() => referenceInputRef.current?.click()}>
-                      <label className="file-input-label">
-                        <input
-                          ref={referenceInputRef}
-                          type="file"
-                          accept=".pdf"
-                          multiple
-                          onChange={handleReferenceUpload}
-                          className="file-input"
-                        />
-                        {referenceFiles.length > 0 ? (
-                          <div className="upload-content">
-                            <p className="upload-instruction">{referenceFiles.length} file{referenceFiles.length !== 1 ? 's' : ''} selected</p>
-                          </div>
-                        ) : (
-                          <div className="upload-content">
-                            <p className="upload-instruction">Select reference PDFs</p>
-                            <span className="upload-hint">or drag and drop</span>
-                            <span className="file-size-hint">Up to 25 MB per file</span>
-                          </div>
-                        )}
-                      </label>
-                      <button className="browse-btn" disabled={referenceFiles.length > 0} onClick={(e) => { e.stopPropagation(); referenceInputRef.current?.click() }}>Browse Files</button>
-                    </div>
-
-                    {referenceFiles.length > 0 && (
-                      <div className="reference-files-container">
-                        <div className="files-summary">
-                          <h4>Reference PDFs ({referenceFiles.length} {referenceFiles.length === 1 ? 'file' : 'files'})</h4>
-                        </div>
-                        <div className="file-list scrollable">
-                          {referenceFiles.map((file) => (
-                            <div key={file.id} className="file-item success">
-                              <span className="file-name">{file.name}</span>
-                              <button onClick={() => removeReference(file.id)} className="remove-btn">✕</button>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <label style={{ display: 'block', marginBottom: '12px', fontWeight: '700', color: '#374151', fontSize: '16px' }}>Reference Document(s)</label>
+                      <div onClick={() => manualReviewInputRef.current?.click()} style={{ padding: '20px', border: '2px dashed #cbd5e1', borderRadius: '12px', textAlign: 'center', cursor: 'pointer', backgroundColor: '#f8fafc', transition: 'all 0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80px' }}>
+                        <input ref={manualReviewInputRef} type="file" accept=".pdf" multiple onChange={(e) => {
+                          const newFiles = Array.from(e.target.files || [])
+                          setManualReviewFiles(prev => [...prev, ...newFiles])
+                          e.target.value = ''
+                        }} style={{ display: 'none' }} />
+                        <div style={{ color: '#64748b', fontWeight: '600', fontSize: '16px' }}>Click to upload PDFs</div>
+                        <div style={{ color: '#94a3b8', fontSize: '13px', marginTop: '4px' }}>You can select multiple files</div>
+                      </div>
+                      {manualReviewFiles.length > 0 && (
+                        <div style={{ marginTop: '12px', maxHeight: '180px', overflowY: 'auto' }}>
+                          {manualReviewFiles.map((file, idx) => (
+                            <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', backgroundColor: '#f0fdf4', borderRadius: '8px', marginBottom: '6px', border: '1px solid #bbf7d0' }}>
+                              <span style={{ color: '#16a34a', fontWeight: '600', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{file.name}</span>
+                              <button onClick={(e) => { e.stopPropagation(); setManualReviewFiles(prev => prev.filter((_, i) => i !== idx)) }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', fontWeight: '700', padding: '0 4px', marginLeft: '8px' }}>×</button>
                             </div>
                           ))}
-                          <div className="file-item-status">
-                            <span className="status-icon">✓</span>
-                            <span className="status-text">All files loaded</span>
-                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
 
-                  {/* Start Validation Button - Inside Upload Files Box */}
-                  {brochureFile && referenceFiles.length > 0 && (
-                    <div className="validation-button-container-inside">
-                      <button
-                        className="start-validation-btn"
-                        onClick={handleExtractCitations}
-                        disabled={isValidating}
-                      >
-                        {isValidating ? (
-                          <>
-                            <span className="spinner"></span>
-                            Processing Pipeline...
-                          </>
-                        ) : (
-                          'Start Validation'
-                        )}
-                      </button>
+                  <button onClick={handleManualReview} disabled={isManualReviewLoading || !manualReviewStatement || manualReviewFiles.length === 0} style={{ width: '100%', padding: '18px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '700', fontSize: '16px', cursor: 'pointer', boxShadow: '0 4px 14px 0 rgba(37, 99, 235, 0.39)', opacity: (isManualReviewLoading || !manualReviewStatement || manualReviewFiles.length === 0) ? 0.6 : 1, transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                    {isManualReviewLoading ? <><span className="spinner"></span> ANALYZING {manualReviewFiles.length} PDF(s)...</> : <>Start Verification</>}
+                  </button>
+                </div>
 
-                      {isValidating && liveLog && (
-                        <div className="status-pill-container" style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          padding: '8px 16px',
-                          backgroundColor: '#eff6ff',
-                          borderRadius: '20px',
-                          border: '1px solid #dbeafe',
-                          color: '#2563eb',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          boxShadow: '0 2px 4px rgba(37, 99, 235, 0.05)',
-                          animation: 'pulseStatus 2s infinite'
-                        }}>
-                          <span style={{
-                            width: '8px',
-                            height: '8px',
-                            backgroundColor: '#2563eb',
-                            borderRadius: '50%'
-                          }}></span>
-                          {liveLog}
+                <div style={{ backgroundColor: 'white', padding: '32px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', border: '1px solid #f3f4f6', minHeight: '500px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  {!manualReviewResult && !isManualReviewLoading && (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', textAlign: 'center' }}>
+                      <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>No Results Yet</h3>
+                      <p style={{ maxWidth: '300px', lineHeight: '1.5' }}>Input a statement and upload a PDF to see the AI validation results here.</p>
+                    </div>
+                  )}
+                  {isManualReviewLoading && (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      <div className="pipeline-loading-container" style={{ textAlign: 'center' }}>
+                        <div className="shimmer" style={{ width: '100%', height: '24px', borderRadius: '4px', marginBottom: '20px' }}></div>
+                        <div className="shimmer" style={{ width: '80%', height: '20px', borderRadius: '4px', marginBottom: '20px' }}></div>
+                        <div className="shimmer" style={{ width: '90%', height: '100px', borderRadius: '12px', marginBottom: '20px' }}></div>
+                        <p style={{ color: '#2563eb', fontWeight: '700', fontSize: '15px' }}> AI is reading the document...</p>
+                      </div>
+                    </div>
+                  )}
+                  {manualReviewResult && (
+                    <div style={{ animation: 'fadeIn 0.4s ease-out' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '16px', borderRadius: '12px', backgroundColor: manualReviewResult.validation_result === 'Supported' ? '#f0fdf4' : (manualReviewResult.validation_result === 'Contradicted' ? '#fef2f2' : '#f8fafc'), border: '1px solid', borderColor: manualReviewResult.validation_result === 'Supported' ? '#bcf0da' : (manualReviewResult.validation_result === 'Contradicted' ? '#fecaca' : '#e2e8f0') }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <span style={{ padding: '8px 16px', borderRadius: '24px', fontSize: '14px', fontWeight: '800', backgroundColor: manualReviewResult.validation_result === 'Supported' ? '#16a34a' : (manualReviewResult.validation_result === 'Contradicted' ? '#dc2626' : '#64748b'), color: 'white', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{manualReviewResult.validation_result}</span>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>Verdict Confidence</div>
+                          <div style={{ fontSize: '24px', fontWeight: '800', color: '#1e293b' }}>{(manualReviewResult.confidence_score * 100).toFixed(0)}%</div>
+                        </div>
+                      </div>
+                      <div style={{ marginBottom: '24px' }}>
+                        <h4 style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Direct Evidence from PDF</h4>
+                        <div style={{ padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', borderLeft: '4px solid #3b82f6', fontSize: '15px', lineHeight: '1.7', color: '#1e293b', fontStyle: 'italic' }}>"{manualReviewResult.matched_evidence}"</div>
+                      </div>
+                      <div style={{ marginBottom: '24px' }}>
+                        <h4 style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>AI Analysis & Context</h4>
+                        <p style={{ margin: 0, fontSize: '15px', color: '#334155', lineHeight: '1.6' }}>{manualReviewResult.analysis_summary}</p>
+                      </div>
+                      {manualReviewResult.page_location && (
+                        <div style={{ paddingTop: '20px', borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '13px', fontWeight: '500' }}>
+                          <span>Location in Document:</span>
+                          <span style={{ color: '#475569' }}>{manualReviewResult.page_location}</span>
                         </div>
                       )}
                     </div>
                   )}
                 </div>
-
-                {/* History Modal Window */}
-                {showHistoryModal && (
-                  <>
-                    {/* Modal Overlay */}
-                    <div
-                      onClick={() => setShowHistoryModal(false)}
-                      style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                        zIndex: 998,
-                        animation: 'fadeIn 0.2s ease-out',
-                        backdropFilter: 'blur(2px)'
-                      }}
-                    />
-
-                    {/* Modal Window */}
-                    <div style={{
-                      position: 'fixed',
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      backgroundColor: 'white',
-                      borderRadius: '12px',
-                      width: '90%',
-                      maxWidth: '750px',
-                      maxHeight: '85vh',
-                      overflow: 'auto',
-                      zIndex: 999,
-                      boxShadow: '0 20px 60px rgba(0, 0, 0, 0.25)',
-                      animation: 'slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                    }}>
-                      {/* Modal Header */}
-                      <div style={{
-                        padding: '24px',
-                        borderBottom: '1px solid #e5e7eb',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        backgroundColor: '#f9fafb',
-                        position: 'sticky',
-                        top: 0,
-                        zIndex: 10
-                      }}>
-                        <h2 style={{ margin: 0, fontSize: '24px', color: '#1f2937', fontWeight: '700' }}>
-                          📋 Validation History
-                        </h2>
-                        <button
-                          onClick={() => setShowHistoryModal(false)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            fontSize: '28px',
-                            cursor: 'pointer',
-                            color: '#6b7280',
-                            padding: '4px 8px',
-                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                            borderRadius: '6px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.target.style.color = '#ef4444'
-                            e.target.style.backgroundColor = '#fee2e2'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.color = '#6b7280'
-                            e.target.style.backgroundColor = 'transparent'
-                          }}
-                        >
-                          ✕
-                        </button>
-                      </div>
-
-                      {/* Modal Content */}
-                      <div style={{ padding: '24px' }}>
-                        <History onSelectBrochure={handleSelectFromHistory} />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Extracted Statements Preview */}
-                {extractedStatements.length > 0 && (
-                  <div className="statements-section">
-                    <div className="statements-header">
-                      <h2>Extracted Statements ({extractedStatements.length})</h2>
-                    </div>
-
-                    <div className="statements-table">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>Sr.No</th>
-                            <th>Statement</th>
-                            <th>Reference No</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {extractedStatements.map((stmt, idx) => (
-                            <tr key={idx}>
-                              <td>{idx + 1}</td>
-                              <td className="statement-cell" title={stmt.statement}>
-                                <span className="statement-text">{stmt.statement?.substring(0, 80)}...</span>
-                              </td>
-                              <td>{stmt.reference_no || stmt.id}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {isLoadingAuth && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyCenter: 'center', minHeight: '100vh', background: '#f3f4f6', fontSize: '18px', color: '#6b7280' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div className="spinner"></div>
+                    Loading...
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Results Summary */}
-                {validationResults.length > 0 && !isValidating && (
-                  <div className="results-section">
-                    <ResultsSummary results={validationResults} />
-
-                    {/* PDF Highlighter Section */}
-                    <div className="pdf-highlighter-section">
-                      <h3>Highlighted PDF Results</h3>
-                      <p className="section-description">Green highlights = Supported | Red highlights = Not Found</p>
-                      <PDFHighlighter pdfFile={brochureFile} validationResults={validationResults} />
-                    </div>
-
-                    {/* Filter Controls */}
-                    <div className="filter-section">
-                      <div className="filter-group">
-                        <label>Filter by Result:</label>
-                        <div className="filter-checkboxes">
-                          {['Supported', 'Not Found', 'Uncited'].map(status => (
-                            <label key={status} className="checkbox-label" style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              padding: '4px 8px',
-                              borderRadius: '4px',
-                              backgroundColor: resultFilter.includes(status) ? '#eff6ff' : 'transparent',
-                              border: '1px solid',
-                              borderColor: resultFilter.includes(status) ? '#3b82f6' : '#e5e7eb',
-                              cursor: 'pointer',
-                              fontSize: '12px'
-                            }}>
-                              <input
-                                type="checkbox"
-                                checked={resultFilter.includes(status)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setResultFilter([...resultFilter, status])
-                                  } else {
-                                    setResultFilter(resultFilter.filter(s => s !== status))
-                                  }
-                                }}
-                              />
-                              {status}
-                            </label>
-                          ))}
+              {!isLoadingAuth && (
+                <>
+                  <div className="content-container">
+                    <div className="upload-section">
+                      <div className="upload-column">
+                        <div className="column-header"><span>Upload Collateral</span></div>
+                        <div className="upload-area" onClick={() => brochureInputRef.current?.click()}>
+                          <label className="file-input-label">
+                            <input ref={brochureInputRef} type="file" accept=".pdf" onChange={handleBrochureUpload} className="file-input" />
+                            {brochureFile ? <div className="upload-content"><p className="upload-instruction">{brochureFile.name}</p></div> : <div className="upload-content"><p className="upload-instruction">Select your PDF file</p><span className="upload-hint">or drag and drop</span><span className="file-size-hint">Up to 25 MB</span></div>}
+                          </label>
+                          <button className="browse-btn" disabled={!!brochureFile} onClick={(e) => { e.stopPropagation(); brochureInputRef.current?.click() }}>Browse Files</button>
                         </div>
                       </div>
+
+                      <div className="upload-column">
+                        <div className="column-header"><span>Upload Supporting References</span></div>
+                        <div className="upload-area" onClick={() => referenceInputRef.current?.click()}>
+                          <label className="file-input-label">
+                            <input ref={referenceInputRef} type="file" accept=".pdf" multiple onChange={handleReferenceUpload} className="file-input" />
+                            {referenceFiles.length > 0 ? <div className="upload-content"><p className="upload-instruction">{referenceFiles.length} files selected</p></div> : <div className="upload-content"><p className="upload-instruction">Select reference PDFs</p><span className="upload-hint">or drag and drop</span><span className="file-size-hint">Up to 25 MB per file</span></div>}
+                          </label>
+                          <button className="browse-btn" disabled={referenceFiles.length > 0} onClick={(e) => { e.stopPropagation(); referenceInputRef.current?.click() }}>Browse Files</button>
+                        </div>
+                        {referenceFiles.length > 0 && (
+                          <div className="reference-files-container">
+                            <div className="files-summary"><h4>Reference PDFs ({referenceFiles.length})</h4></div>
+                            <div className="file-list scrollable">
+                              {referenceFiles.map((file) => (
+                                <div key={file.id} className="file-item success">
+                                  <span className="file-name">{file.name}</span>
+                                  <button onClick={() => removeReference(file.id)} className="remove-btn">✕</button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {brochureFile && referenceFiles.length > 0 && (
+                        <div className="validation-button-container-inside">
+                          <button className="start-validation-btn" onClick={handleExtractCitations} disabled={isValidating}>
+                            {isValidating ? <><span className="spinner"></span> Processing Pipeline...</> : 'Start Validation'}
+                          </button>
+                          {isValidating && liveLog && (
+                            <div className="status-pill-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: '#eff6ff', borderRadius: '20px', border: '1px solid #dbeafe', color: '#2563eb', fontSize: '13px', fontWeight: '600', boxShadow: '0 2px 4px rgba(37, 99, 235, 0.05)', animation: 'pulseStatus 2s infinite' }}>
+                              <span style={{ width: '8px', height: '8px', backgroundColor: '#2563eb', borderRadius: '50%' }}></span>
+                              {liveLog}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
-                    {/* Detailed Results - Only show when filter is selected */}
-                    {filteredResults.length > 0 && (
+                    {showHistoryModal && (
                       <>
-                        <ValidationResults
-                          results={filteredResults}
-                          expandedResult={expandedResult}
-                          setExpandedResult={setExpandedResult}
-                          totalResults={validationResults.length}
-                        />
+                        <div onClick={() => setShowHistoryModal(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.4)', zIndex: 998, animation: 'fadeIn 0.2s ease-out', backdropFilter: 'blur(2px)' }} />
+                        <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'white', borderRadius: '12px', width: '90%', maxWidth: '750px', maxHeight: '85vh', overflow: 'auto', zIndex: 999, boxShadow: '0 20px 60px rgba(0, 0, 0, 0.25)', animation: 'slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+                          <div style={{ padding: '24px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f9fafb', position: 'sticky', top: 0, zIndex: 10 }}>
+                            <h2 style={{ margin: 0, fontSize: '24px', color: '#1f2937', fontWeight: '700' }}>📋 Validation History</h2>
+                            <button onClick={() => setShowHistoryModal(false)} style={{ background: 'none', border: 'none', fontSize: '28px', cursor: 'pointer', color: '#6b7280', padding: '4px 8px', borderRadius: '6px' }}>✕</button>
+                          </div>
+                          <div style={{ padding: '24px' }}>
+                            <History onSelectBrochure={handleSelectFromHistory} />
+                          </div>
+                        </div>
                       </>
                     )}
 
-                    {resultFilter.length === 0 && validationResults.length > 0 && (
-                      <div style={{ padding: '40px', backgroundColor: '#f0f4f8', borderRadius: '12px', marginTop: '20px', border: '2px dashed #cbd5e1' }}>
-                        <p style={{ color: '#475569', textAlign: 'center', fontSize: '16px', fontWeight: '500' }}>
-                          Select one or more filters above to view detailed validation results
-                        </p>
+                    {extractedStatements.length > 0 && (
+                      <div className="statements-section">
+                        <div className="statements-header"><h2>Extracted Statements ({extractedStatements.length})</h2></div>
+                        <div className="statements-table">
+                          <table>
+                            <thead><tr><th>Sr.No</th><th>Statement</th><th>Reference No</th></tr></thead>
+                            <tbody>
+                              {extractedStatements.map((stmt, idx) => (
+                                <tr key={idx}><td>{idx + 1}</td><td className="statement-cell" title={stmt.statement}><span className="statement-text">{stmt.statement?.substring(0, 80)}...</span></td><td>{stmt.reference_no || stmt.id}</td></tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     )}
 
-                    {resultFilter.length > 0 && filteredResults.length === 0 && (
-                      <div style={{ padding: '20px', backgroundColor: '#fef2f2', borderRadius: '8px', marginTop: '20px', border: '1px solid #fee2e2' }}>
-                        <p style={{ color: '#991b1b', textAlign: 'center' }}>No results match the selected filter</p>
+                    {validationResults.length > 0 && !isValidating && (
+                      <div className="results-section">
+                        <ResultsSummary results={validationResults} />
+                        <div className="pdf-highlighter-section">
+                          <h3>Highlighted PDF Results</h3>
+                          <p className="section-description">Green highlights = Supported | Red highlights = Not Found</p>
+                          <PDFHighlighter pdfFile={brochureFile} validationResults={validationResults} />
+                        </div>
+                        <div className="filter-section">
+                          <div className="filter-group">
+                            <label>Filter by Result:</label>
+                            <div className="filter-checkboxes">
+                              {['Supported', 'Not Found', 'Uncited'].map(status => (
+                                <label key={status} className="checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', borderRadius: '4px', backgroundColor: resultFilter.includes(status) ? '#eff6ff' : 'transparent', border: '1px solid', borderColor: resultFilter.includes(status) ? '#3b82f6' : '#e5e7eb', cursor: 'pointer', fontSize: '12px' }}>
+                                  <input type="checkbox" checked={resultFilter.includes(status)} onChange={(e) => { if (e.target.checked) setResultFilter([...resultFilter, status]); else setResultFilter(resultFilter.filter(s => s !== status)); }} />
+                                  {status}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        {filteredResults.length > 0 && (
+                          <ValidationResults results={filteredResults} expandedResult={expandedResult} setExpandedResult={setExpandedResult} totalResults={validationResults.length} />
+                        )}
+                        {resultFilter.length === 0 && validationResults.length > 0 && (
+                          <div style={{ padding: '40px', backgroundColor: '#f0f4f8', borderRadius: '12px', marginTop: '20px', border: '2px dashed #cbd5e1' }}><p style={{ color: '#475569', textAlign: 'center', fontSize: '16px', fontWeight: '500' }}>Select one or more filters above to view detailed validation results</p></div>
+                        )}
+                        <DownloadSection results={validationResults} />
                       </div>
                     )}
-
-                    {/* Download Section */}
-                    <DownloadSection results={validationResults} />
                   </div>
-                )}
-              </div>
-
-              <footer className="footer">
-                <div className="footer-content">
-                  <div className="footer-buttons">
-                    {(brochureFile || referenceFiles.length > 0 || extractedStatements.length > 0 || validationResults.length > 0) && (
-                      <button className="reset-btn" onClick={resetAll} disabled={isValidating}>
-                        Reset All
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </footer>
+                  <footer className="footer">
+                    <div className="footer-content">
+                      <div className="footer-buttons">
+                        {(brochureFile || referenceFiles.length > 0 || extractedStatements.length > 0 || validationResults.length > 0) && (
+                          <button className="reset-btn" onClick={resetAll} disabled={isValidating}>Reset All</button>
+                        )}
+                      </div>
+                    </div>
+                  </footer>
+                </>
+              )}
             </>
           )}
         </main>

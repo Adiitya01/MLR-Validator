@@ -358,7 +358,7 @@ RULES:
     "validation_result": "Supported" or "Contradicted" or "Not Found",
     "matched_evidence": "Exact quotes from the document",
     "page_location": "Page or section where found",
-    "confidence_score": 0.85,
+    "confidence_score": 0.0 to 1.0 (reflecting your actual certainty),
     "analysis_summary": "Brief explanation"
 }}
 
@@ -475,7 +475,7 @@ Respond ONLY with valid JSON (no markdown, no code blocks, no explanation outsid
     "validation_result": "Supported" or "Contradicted" or "Not Found",
     "matched_evidence": "Direct quotes from paper (max 5 sentences, separated by | if multiple)",
     "page_location": "Context describing where in paper evidence appears",
-    "confidence_score": 0.95,
+    "confidence_score": 0.0 to 1.0 (reflecting your actual certainty),
     "analysis_summary": "Brief explanation of how paper supports/contradicts/ignores the statement"
 }}
 
