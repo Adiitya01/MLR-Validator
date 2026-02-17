@@ -6,9 +6,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "cd MLR_UI_React && npm run dev",
-    "build": "cd MLR_UI_React && npm run build",
-    "preview": "cd MLR_UI_React && npm run preview"
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "preview": "cd frontend && npm run preview"
   },
   "keywords": [
     "statement-validation",

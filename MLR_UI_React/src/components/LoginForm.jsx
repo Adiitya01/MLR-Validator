@@ -43,7 +43,7 @@ export default function LoginForm({ onSuccess }) {
 
     try {
       const apiBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${apiBaseURL}/login`, {
+      const response = await fetch(`${apiBaseURL}/api/auth/login/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -143,6 +143,12 @@ export default function LoginForm({ onSuccess }) {
               onChange={handleChange}
               disabled={loading}
             />
+          </div>
+
+          <div className="form-group" style={{ textAlign: 'right', marginTop: '-15px', marginBottom: '20px' }}>
+            <a href="/forgot-password" style={{ fontSize: '13px', color: '#60a5fa', textDecoration: 'none', fontWeight: 500 }}>
+              Forgot Password?
+            </a>
           </div>
 
           <button

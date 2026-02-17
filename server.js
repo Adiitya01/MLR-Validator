@@ -45,7 +45,7 @@ proxy.on('error', (err, req, res) => {
 });
 
 // Serve static React frontend from dist folder
-const distPath = path.join(__dirname, 'MLR_UI_React', 'dist');
+const distPath = path.join(__dirname, 'frontend', 'dist');
 app.use(express.static(distPath));
 
 // Health check endpoint

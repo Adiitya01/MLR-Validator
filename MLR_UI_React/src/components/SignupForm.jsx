@@ -52,8 +52,8 @@ export default function SignupForm({ onSuccess }) {
     setError('');
 
     try {
-      const apiBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000' || 'https://mlr-backend-api.onrender.com';
-      const response = await fetch(`${apiBaseURL}/signup`, {
+      const apiBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiBaseURL}/api/auth/signup/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

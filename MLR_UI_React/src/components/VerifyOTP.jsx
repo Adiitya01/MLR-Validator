@@ -36,7 +36,7 @@ export default function VerifyOTP() {
         setError('');
         try {
             const apiBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-            const response = await fetch(`${apiBaseURL}/auth/send-otp`, {
+            const response = await fetch(`${apiBaseURL}/api/auth/send-otp/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
@@ -68,7 +68,7 @@ export default function VerifyOTP() {
 
         try {
             const apiBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-            const response = await fetch(`${apiBaseURL}/auth/verify-otp`, {
+            const response = await fetch(`${apiBaseURL}/api/auth/verify-otp/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: userData.email, otp })

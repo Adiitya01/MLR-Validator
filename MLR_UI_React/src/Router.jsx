@@ -4,6 +4,7 @@ import App from './App';
 import SignupForm from './components/SignupForm';
 import LoginForm from './components/LoginForm';
 import VerifyOTP from './components/VerifyOTP';
+import ForgotPassword from './components/ForgotPassword';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const Router = () => {
@@ -42,6 +43,14 @@ const Router = () => {
           element={
             <ProtectedRoute requiredAuth={true} checkVerification={false}>
               <VerifyOTP />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <ProtectedRoute requiredAuth={false}>
+              <ForgotPassword />
             </ProtectedRoute>
           }
         />

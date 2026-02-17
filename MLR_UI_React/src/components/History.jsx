@@ -24,23 +24,7 @@ export default function History({ onSelectBrochure }) {
       setLoading(true)
       setError(null)
       // Fetch all validation history with results from single endpoint
-      const apiBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const token = localStorage.getItem('access_token');
-
-      const response = await fetch(`${apiBaseURL}/validation-history`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      if (!response.ok) {
-        if (response.status === 401) {
-          window.location.href = '/login';
-          return;
-        }
-        throw new Error('Failed to fetch history')
-      }
-      const data = await response.json()
-      // History already sorted by created_at DESC from backend
+      const data = await apiClient.getBrochures();
       setBrochures(data.history || [])
     } catch (err) {
       setError('Failed to load history')

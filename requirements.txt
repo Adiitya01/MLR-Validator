@@ -1,31 +1,28 @@
 # General
-streamlit
 pandas
 openpyxl
-PyMuPDF  # fitz
-PyPDF2
+PyMuPDF==1.25.3
 google-generativeai
 python-dotenv
 requests
 numpy
 httpx
 
-# Web Framework
-fastapi
-uvicorn
-gunicorn
-python-multipart
+# Django Framework
+django
+djangorestframework
+django-cors-headers
+djangorestframework-simplejwt
+django-celery-results
+celery
+redis
 
 # Database
-sqlalchemy
 psycopg2-binary
-pymongo[srv]
 
 # Authentication & Security
 bcrypt
-python-jose[cryptography]
 passlib[bcrypt]
 sendgrid
-email-validator
 certifi
-redis
+python-jose[cryptography]

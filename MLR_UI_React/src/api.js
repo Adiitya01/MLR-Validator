@@ -1,14 +1,18 @@
-// API Configuration - Connects to FastAPI backend
+// API Configuration - Connects to Django DRF backend
 // Backend runs on http://localhost:8000
 
 class APIClient {
   constructor(baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000',) {
     console.log('[DEBUG] APIClient initialized with baseUrl:', baseUrl);
-    this.baseUrl = baseUrl;
+    this.baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     this.isConnected = false;
+
+    // API Prefixes
+    this.validatorPath = '/api/validator';
+    this.authPath = '/api/auth';
   }
 
-  // Expose baseURL for external use (e.g., in fetch calls)
+  // Expose baseURL for external use
   get baseURL() {
     return this.baseUrl;
   }
@@ -16,7 +20,7 @@ class APIClient {
   // Test backend connection on app start
   async testConnection() {
     try {
-      const response = await fetch(`${this.baseUrl}/health`);
+      const response = await fetch(`${this.baseUrl}${this.validatorPath}/health/`);
       if (response.ok) {
         this.isConnected = true;
         return true;
@@ -31,7 +35,7 @@ class APIClient {
   async getResults(brochureId) {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`${this.baseUrl}/validation-results/${brochureId}`, {
+      const response = await fetch(`${this.baseUrl}${this.validatorPath}/results/${brochureId}/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -48,7 +52,12 @@ class APIClient {
   // Get all brochures (history)
   async getBrochures() {
     try {
-      const response = await fetch(`${this.baseUrl}/brochures`);
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${this.baseUrl}${this.validatorPath}/history/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (!response.ok) {
         throw new Error(`Failed to fetch brochures: ${response.status}`);
       }
@@ -63,7 +72,7 @@ class APIClient {
   async checkJobStatus(jobId) {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`${this.baseUrl}/job-status/${jobId}`, {
+      const response = await fetch(`${this.baseUrl}${this.validatorPath}/job-status/${jobId}/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -86,61 +95,74 @@ class APIClient {
     const formData = new FormData();
     formData.append('brochure_pdf', brochureFile);
 
-    // Add all reference files
     referenceFiles.forEach((file) => {
       formData.append('reference_pdfs', file);
     });
 
-    // Add validation type
     formData.append('validation_type', validationType);
 
     try {
+      const token = localStorage.getItem('access_token');
       const options = {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData
       };
 
-      // Add auth token if available
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        options.headers = {
-          'Authorization': `Bearer ${token}`
-        };
-      }
-
-      console.log(`[DEBUG] Starting Job via ${this.baseUrl}/run-pipeline`);
-      const response = await fetch(`${this.baseUrl}/run-pipeline`, options);
+      console.log(`[DEBUG] Starting Job via ${this.baseUrl}${this.validatorPath}/run-pipeline/`);
+      const response = await fetch(`${this.baseUrl}${this.validatorPath}/run-pipeline/`, options);
 
       if (response.status === 401) {
-        console.error('[AUTH] Token expired or invalid. Redirecting to login...');
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('user_data');
-        window.location.href = '/login?expired=true';
+        this.handleAuthError();
         throw new Error('Session expired. Please log in again.');
       }
 
       if (!response.ok) {
-        let errorDetail = '';
-        try {
-          const errorJson = await response.json();
-          errorDetail = errorJson.detail || JSON.stringify(errorJson);
-        } catch (e) {
-          errorDetail = await response.text();
-        }
-        throw new Error(`API error: ${response.status} - ${errorDetail || response.statusText}`);
+        const errorJson = await response.json().catch(() => ({}));
+        throw new Error(errorJson.detail || `API error: ${response.status}`);
       }
 
       const data = await response.json();
-      if (!data.job_id) {
-        throw new Error('No job_id in response');
-      }
-
       return data.job_id;
     } catch (error) {
       throw error;
     }
   }
+
+  // Manual Review
+  async runManualReview(statement, referencePdfs, referenceNo = null) {
+    const formData = new FormData();
+    formData.append('statement', statement);
+    if (referenceNo) formData.append('reference_no', referenceNo);
+
+    referencePdfs.forEach(file => {
+      formData.append('reference_pdfs', file);
+    });
+
+    const token = localStorage.getItem('access_token');
+    const response = await fetch(`${this.baseUrl}${this.validatorPath}/manual-review/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorJson = await response.json().catch(() => ({}));
+      throw new Error(errorJson.detail || 'Manual review failed');
+    }
+
+    return await response.json();
+  }
+
+  handleAuthError() {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user_data');
+    window.location.href = '/login?expired=true';
+  }
 }
 
-// Export singleton instance
 export const apiClient = new APIClient();

@@ -84,7 +84,7 @@ function App() {
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`${apiClient.baseUrl}/logs/latest`)
+        const res = await fetch(`${apiClient.baseUrl}/api/validator/logs/latest/`)
         if (res.status === 404) return // Silent stop if logs endpoint is gone
         const data = await res.json()
 
@@ -263,19 +263,12 @@ function App() {
     setManualReviewResult(null)
 
     try {
-      const formData = new FormData()
-      formData.append('statement', manualReviewStatement)
-      manualReviewFiles.forEach(f => {
-        formData.append('reference_pdfs', f)
-      })
-      formData.append('reference_no', manualReviewReferenceNo)
+      const data = await apiClient.runManualReview(
+        manualReviewStatement,
+        manualReviewFiles,
+        manualReviewReferenceNo
+      )
 
-      const response = await fetch(`${apiClient.baseUrl}/manual-review`, {
-        method: 'POST',
-        body: formData
-      })
-
-      const data = await response.json()
       if (data.status === 'success') {
         setManualReviewResult(data.result)
       } else {
