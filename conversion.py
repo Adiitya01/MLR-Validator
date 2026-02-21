@@ -90,9 +90,7 @@ def build_validation_dataframe(in_text, references, title=""):
                 superscript_no = ref_match.group(1).strip()
                 final_statement = final_statement[:ref_match.start()].strip()
 
-        # ----------------------------------------------------
-        # 4. Lookup reference text
-        # ----------------------------------------------------
+        # 4. Lookup reference text (used for Name-by-Name matching)
         ref_text = references.get(superscript_no, "")
 
         output.append({
@@ -151,7 +149,7 @@ def build_validation_rows_image1(data_rows, references):
         else:
             final_statement = f"{row_name}."
         
-        # Lookup reference text
+        # Lookup reference text (used for Name-by-Name matching)
         reference_text = references.get(reference_no, "")
         
         output.append({
@@ -206,7 +204,7 @@ def build_validation_rows_image2(data_rows, references):
         else:
             final_statement = f"{row_name}"
         
-        # Lookup reference text
+        # Lookup reference text (used for Name-by-Name matching)
         reference_text = references.get(reference_no, "")
         
         output.append({

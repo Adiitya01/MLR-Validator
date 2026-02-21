@@ -693,54 +693,59 @@ class StatementValidator:
         self.pdf_content_cache = {}  # Store raw PDF bytes
         self.pdf_gemini_cache = {}  # Cache uploaded PDFs to Gemini (filename -> pdf_file)
         
-    def filter_pdfs_by_references(self, pdf_files_dict: Dict, reference_nos) -> Dict:
+    def filter_pdfs_by_references(self, pdf_files_dict: Dict, reference_nos, reference_text="") -> Dict:
         """
-        Filter PDF dict to only include PDFs matching the reference numbers.
-        
-        E.g., if reference_nos = "1,16,17", only return PDFs named "1.*", "16.*", "17.*"
+        Filter PDF dict using two layers:
+        1. Name-by-Name Match: Author + Year from reference_text
+        2. Number-First Match: Fallback to leading number in filename (e.g., "1. pdf")
         """
         if not reference_nos or str(reference_nos).strip() in ['', '0', 'nan']:
-            logger.warning(f"[FILTER] [FAIL] No reference numbers provided: {reference_nos}")
             return {}
         
-        # Parse reference numbers - handle "1,16,17" or "1" format
         ref_str = str(reference_nos).strip()
+        ref_text_clean = str(reference_text).strip().lower()
         ref_numbers = []
         
-        for part in ref_str.split(','):
+        # Parse numbers from "1, 2" or "1-3"
+        for part in ref_str.replace('-', ',').split(','):
             part = part.strip()
             if part and part.isdigit():
                 ref_numbers.append(int(part))
         
-        if not ref_numbers:
-            logger.warning(f"[FILTER] [FAIL] No valid reference numbers found in: {reference_nos}")
-            return {}
-        
-        logger.info(f"[FILTER] Looking for references: {ref_numbers} in {len(pdf_files_dict)} PDFs")
-        
-        # Filter PDFs that START with these reference numbers
         filtered = {}
-        for filename, pdf_data in pdf_files_dict.items():
-            # Try to extract leading number from filename (e.g., "1. Author.pdf" → 1)
-            match = None
-            try:
-                # Get first word/number from filename
-                first_part = filename.split('.')[0].split(' ')[0].strip()
-                if first_part.isdigit():
-                    match = int(first_part)
-            except:
-                pass
+        pdf_filenames = list(pdf_files_dict.keys())
+
+        # --- LAYER 1: Name-by-Name Matching (Author + Year) ---
+        if ref_text_clean:
+            # Extract possible year (4 digits)
+            year_match = re.search(r'\b(19|20)\d{2}\b', ref_text_clean)
+            year = year_match.group(0) if year_match else None
             
-            # Check if this PDF's number matches any reference
-            if match in ref_numbers:
-                filtered[filename] = pdf_data
-                logger.info(f"[FILTER]   [OK] MATCHED PDF {match}: {filename}")
-        
-        logger.info(f"[FILTER] Result: {len(filtered)}/{len(pdf_files_dict)} PDFs matched")
-        
-        if len(filtered) == 0:
-            logger.warning(f"[FILTER] [FAIL] WARNING: No PDFs matched! refs={ref_numbers}")
-            logger.debug(f"[FILTER]   Available PDFs: {list(pdf_files_dict.keys())}")
+            # Extract first word/author (3+ chars)
+            words = re.findall(r'\b[a-zA-Z]{3,}\b', ref_text_clean)
+            author = words[0] if words else None
+
+            if author and year:
+                for fname in pdf_filenames:
+                    fname_lower = fname.lower()
+                    if author in fname_lower and year in fname_lower:
+                        filtered[fname] = pdf_files_dict[fname]
+                        logger.info(f"[MATCH] [NAME] Found '{author} ({year})' in: {fname}")
+
+        # --- LAYER 2: Number-First Matching (Fallback) ---
+        if not filtered and ref_numbers:
+            for fname in pdf_filenames:
+                try:
+                    # Get leading number (e.g. "1. Author.pdf" -> 1)
+                    first_part = re.split(r'[\.\s_-]', fname)[0].strip()
+                    if first_part.isdigit() and int(first_part) in ref_numbers:
+                        filtered[fname] = pdf_files_dict[fname]
+                        logger.info(f"[MATCH] [NUMBER] Found Ref #{first_part} in: {fname}")
+                except:
+                    continue
+
+        if not filtered:
+            logger.warning(f"[FILTER] No PDF match found for Ref {ref_numbers} or Text '{ref_text_clean[:30]}...'")
         
         return filtered
     
@@ -895,8 +900,10 @@ class StatementValidator:
                     filtered_pdf_dict = pdf_files_dict
                     is_uncited_fallback = True
                 else:
-                    # Filter PDFs for ALL reference numbers in this group
-                    filtered_pdf_dict = self.filter_pdfs_by_references(pdf_files_dict, combined_refs)
+                    # Filter PDFs for ALL reference numbers in this group, using reference text for name matching
+                    # First, get reference text from sample row for name matching
+                    sample_reference_text = sample_row.get('reference', '')
+                    filtered_pdf_dict = self.filter_pdfs_by_references(pdf_files_dict, combined_refs, sample_reference_text)
                     is_uncited_fallback = False
                 
                 if not filtered_pdf_dict:
