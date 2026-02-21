@@ -123,16 +123,56 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 # ==============================================================================
-# CELERY CONFIGURATION
+# CELERY CONFIGURATION (Production-Grade Async Processing)
 # ==============================================================================
+
+# --- Broker & Backend ---
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/1')
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_CACHE_BACKEND = 'default'
+
+# --- Serialization ---
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
-CELERY_TASK_ALWAYS_EAGER = os.getenv('CELERY_ALWAYS_EAGER', 'True') == 'True'
+
+# --- CRITICAL: Must be False in production for true async processing ---
+# When True, tasks run synchronously inside the web process (blocks everything).
+# Set to True ONLY for local development/testing without Redis.
+CELERY_TASK_ALWAYS_EAGER = os.getenv('CELERY_ALWAYS_EAGER', 'False') == 'True'
+
+# --- Task Execution Limits ---
+# Hard kill after 10 minutes (prevents zombie tasks from Gemini API hangs)
+CELERY_TASK_TIME_LIMIT = int(os.getenv('CELERY_TASK_TIME_LIMIT', '600'))
+# Soft warning at 8 minutes (gives task a chance to save partial results)
+CELERY_TASK_SOFT_TIME_LIMIT = int(os.getenv('CELERY_TASK_SOFT_TIME_LIMIT', '480'))
+
+# --- Worker Reliability ---
+# Acknowledge AFTER task completes (not before). If a worker crashes mid-task,
+# the task is re-delivered to another worker instead of being lost.
+CELERY_TASK_ACKS_LATE = True
+# Reject and re-queue tasks if worker is killed (e.g., during deploy)
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+# Each worker grabs only 1 task at a time (prevents one worker hoarding all AI jobs)
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+
+# --- Broker Resilience ---
+# If Redis broker goes down, keep retrying connection every 30 seconds
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_BROKER_CONNECTION_MAX_RETRIES = None  # Retry forever
+# If a task isn't ack'd within 12 minutes, make it visible to other workers
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'visibility_timeout': 720,  # 12 minutes (must be > TASK_TIME_LIMIT)
+}
+
+# --- Task Result Settings ---
+CELERY_RESULT_EXPIRES = 60 * 60 * 24 * 7  # Keep results for 7 days
+CELERY_TASK_TRACK_STARTED = True  # Track when tasks actually start running
+
+# --- Concurrency (per worker process) ---
+CELERY_WORKER_CONCURRENCY = int(os.getenv('CELERY_WORKER_CONCURRENCY', '2'))
+CELERY_WORKER_MAX_TASKS_PER_CHILD = int(os.getenv('CELERY_MAX_TASKS_PER_CHILD', '50'))
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [

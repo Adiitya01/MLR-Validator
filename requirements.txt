@@ -16,9 +16,11 @@ djangorestframework-simplejwt
 django-celery-results
 celery
 redis
+gunicorn
 
 # Database
 psycopg2-binary
+dj-database-url
 
 # Authentication & Security
 bcrypt

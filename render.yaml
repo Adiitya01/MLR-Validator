@@ -1,5 +1,7 @@
 services:
-  # PostgreSQL Database
+  # ============================================================================
+  # DATABASE: PostgreSQL
+  # ============================================================================
   - type: pserv
     name: mlr-postgres
     plan: starter
@@ -8,78 +10,234 @@ services:
     user: postgres
     postgresMajorVersion: 15
 
-  # Backend API (FastAPI)
+  # ============================================================================
+  # CACHE/BROKER: Redis (Required for Celery async processing)
+  # ============================================================================
+  - type: redis
+    name: mlr-redis
+    plan: starter
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
+
+  # ============================================================================
+  # BACKEND API (Django + Gunicorn) — Auto-Scaled
+  # ============================================================================
   - type: web
     name: mlr-backend
     env: python
     plan: standard
-    numInstances: 1
-    healthCheckPath: /health
-    
+    region: oregon
+
+    # --- AUTO-SCALING ---
+    # Render will spin up/down instances based on CPU and memory pressure.
+    # Min 2 instances ensures zero-downtime deploys (one stays up while the other restarts).
+    # Max 5 instances handles traffic spikes (e.g., batch validation from multiple users).
+    scaling:
+      minInstances: 2
+      maxInstances: 5
+      targetCPUPercent: 70
+      targetMemoryPercent: 80
+
+    healthCheckPath: /api/health/
+
     buildCommand: |
       pip install --upgrade pip
       pip install -r requirements.txt
-    
-    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
-    
+
+    # Gunicorn replaces single-threaded uvicorn/runserver:
+    # 3 workers × 4 threads = 12 concurrent requests per instance
+    # With 2-5 instances = 24-60 concurrent requests total
+    startCommand: cd backend && gunicorn config.wsgi:application -c gunicorn.conf.py
+
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11
+        value: "3.11"
       - key: ENVIRONMENT
         value: production
+      - key: DEBUG
+        value: "False"
       - key: LOG_LEVEL
         value: INFO
+
+      # Database (auto-linked from mlr-postgres service)
       - key: DATABASE_URL
         fromDatabase:
           name: mlr-postgres
           property: connectionString
+
+      # Redis broker (auto-linked from mlr-redis service)
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: mlr-redis
+          property: connectionString
+      
+      # CRITICAL: Must be False for async task processing
+      - key: CELERY_ALWAYS_EAGER
+        value: "False"
+
+      # Secrets (set via Render dashboard, NOT here)
       - key: MONGODB_URI
         sync: false
       - key: GEMINI_API_KEY
         sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
       - key: SECRET_KEY
         generateValue: true
+
+      # JWT
       - key: ALGORITHM
         value: HS256
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "30"
+
+      # CORS (update with your actual frontend domain)
       - key: CORS_ORIGINS
-        value: https://mlr-frontend.render.com
+        value: "https://mlr-frontend.onrender.com"
+
+      # Gunicorn tuning
+      - key: GUNICORN_WORKERS
+        value: "3"
+      - key: GUNICORN_THREADS
+        value: "4"
+      - key: GUNICORN_TIMEOUT
+        value: "120"
+
+      # API
       - key: API_HOST
         value: "0.0.0.0"
       - key: API_PORT
         value: $PORT
-    
+
     routes:
       - type: http
         path: /
-    
+
     disk:
       name: app-logs
       mountPath: /app/logs
       sizeGB: 1
 
-  # Frontend (React with Vite)
+  # ============================================================================
+  # CELERY WORKER (Background Job Processor) — Auto-Scaled
+  # ============================================================================
+  # This is a SEPARATE service that runs Celery workers. It does NOT serve HTTP.
+  # When a user submits a validation job, the Django backend sends the task to
+  # Redis, and THIS worker picks it up and runs the Gemini AI validation pipeline.
+  #
+  # Why separate?
+  # - Web server stays responsive (doesn't block on 5-minute AI jobs)
+  # - Workers can scale independently (more AI jobs = more workers)
+  # - Worker crashes don't take down the API
+  - type: worker
+    name: mlr-celery-worker
+    env: python
+    plan: standard
+    region: oregon
+
+    # --- AUTO-SCALING FOR WORKERS ---
+    # Scale workers based on CPU (AI processing is CPU/IO intensive).
+    # Min 1: always have at least one worker ready.
+    # Max 4: handles up to 4 concurrent validation jobs (each job takes ~3-5 min).
+    scaling:
+      minInstances: 1
+      maxInstances: 4
+      targetCPUPercent: 60
+      targetMemoryPercent: 75
+
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+
+    # Start Celery worker with:
+    #   -c 2: 2 concurrent tasks per worker instance
+    #   -l info: info-level logging
+    #   -E: send task events (for monitoring)
+    #   --max-tasks-per-child=50: restart child after 50 tasks (prevents memory leaks)
+    #   -Q default: process tasks from the default queue
+    startCommand: >
+      cd backend && celery -A config worker
+      -l info
+      -c 2
+      -E
+      --max-tasks-per-child=50
+      -Q default
+
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "False"
+      - key: LOG_LEVEL
+        value: INFO
+
+      # Same DB as backend
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mlr-postgres
+          property: connectionString
+
+      # Same Redis broker
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: mlr-redis
+          property: connectionString
+
+      # MUST be False — workers must actually process tasks!
+      - key: CELERY_ALWAYS_EAGER
+        value: "False"
+
+      # Task processing limits
+      - key: CELERY_TASK_TIME_LIMIT
+        value: "600"
+      - key: CELERY_TASK_SOFT_TIME_LIMIT
+        value: "480"
+      - key: CELERY_WORKER_CONCURRENCY
+        value: "2"
+
+      # Worker needs access to AI services
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+
+  # ============================================================================
+  # FRONTEND (React + Vite) — Auto-Scaled
+  # ============================================================================
   - type: web
     name: mlr-frontend
     env: node
     plan: standard
-    numInstances: 1
+    region: oregon
+
+    # Frontend auto-scaling (lighter workload than backend)
+    scaling:
+      minInstances: 1
+      maxInstances: 3
+      targetCPUPercent: 80
+      targetMemoryPercent: 85
+
     buildCommand: |
       cd MLR_UI_React
       npm ci
       npm run build
-    
+
     startCommand: cd MLR_UI_React && npm run preview
-    
+
     envVars:
       - key: NODE_VERSION
-        value: 18
+        value: "18"
       - key: REACT_APP_API_URL
-        value: https://mlr-backend.render.com
+        value: https://mlr-backend.onrender.com
       - key: REACT_APP_ENV
         value: production
-    
+
     routes:
       - type: http
         path: /
